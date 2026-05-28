@@ -1,0 +1,79 @@
+{
+  "linkBudget": [
+    {
+      "id": "campus-fiber",
+      "name": "Campus fiber - 2 km",
+      "input": {
+        "protocol": "bb84",
+        "lengthKm": 2,
+        "fiberLossDbPerKm": 0.2,
+        "connectorLossDb": 2,
+        "sourceRateHz": 100000000,
+        "meanPhotonNumber": 0.5,
+        "detectorEfficiency": 0.2,
+        "darkCountProbability": 0.000001,
+        "backgroundCountProbability": 0.000001,
+        "misalignmentError": 0.01,
+        "basisSiftingFactor": 0.5,
+        "reconciliationEfficiency": 1.16,
+        "blockSize": 1000000
+      }
+    },
+    {
+      "id": "metro-fiber",
+      "name": "Metro fiber - 25 km",
+      "input": {
+        "protocol": "decoy_bb84",
+        "lengthKm": 25,
+        "fiberLossDbPerKm": 0.2,
+        "connectorLossDb": 3,
+        "sourceRateHz": 1000000000,
+        "meanPhotonNumber": 0.4,
+        "detectorEfficiency": 0.25,
+        "darkCountProbability": 0.000001,
+        "backgroundCountProbability": 0.000002,
+        "misalignmentError": 0.015,
+        "basisSiftingFactor": 0.5,
+        "reconciliationEfficiency": 1.16,
+        "blockSize": 10000000
+      }
+    },
+    {
+      "id": "long-fiber",
+      "name": "Long fiber - 100 km",
+      "input": {
+        "protocol": "decoy_bb84",
+        "lengthKm": 100,
+        "fiberLossDbPerKm": 0.2,
+        "connectorLossDb": 4,
+        "sourceRateHz": 1000000000,
+        "meanPhotonNumber": 0.4,
+        "detectorEfficiency": 0.25,
+        "darkCountProbability": 0.000001,
+        "backgroundCountProbability": 0.000002,
+        "misalignmentError": 0.02,
+        "basisSiftingFactor": 0.5,
+        "reconciliationEfficiency": 1.18,
+        "blockSize": 10000000
+      }
+    }
+  ],
+  "kms": [
+    {
+      "id": "vpn-rekey-demo",
+      "name": "VPN re-key demo",
+      "input": {
+        "durationSeconds": 3600,
+        "timeStepSeconds": 10,
+        "initialBufferBits": 1000000,
+        "bufferCapacityBits": 5000000,
+        "generationRateBitsPerSecond": 2000,
+        "keyTtlSeconds": 86400,
+        "services": [
+          { "id": "vpn-a", "name": "VPN tunnel A", "priority": 1, "requestRatePerSecond": 0.05, "bitsPerRequest": 256 },
+          { "id": "bulk-otp", "name": "Bulk OTP experiment", "priority": 5, "requestRatePerSecond": 0.01, "bitsPerRequest": 4096 }
+        ]
+      }
+    }
+  ]
+}

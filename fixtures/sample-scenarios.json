@@ -1,0 +1,55 @@
+[
+  {
+    "id": "three-node-trusted-qkd",
+    "name": "Three-node trusted QKD line",
+    "description": "Alice and Bob connected through a trusted key relay node.",
+    "nodes": [
+      { "id": "alice", "label": "Alice", "type": "endpoint", "x": 0, "y": 0 },
+      { "id": "relay", "label": "Trusted relay", "type": "trusted_node", "x": 1, "y": 0 },
+      { "id": "bob", "label": "Bob", "type": "endpoint", "x": 2, "y": 0 }
+    ],
+    "links": [
+      { "id": "alice-relay", "source": "alice", "target": "relay", "lengthKm": 25, "attenuationDbPerKm": 0.2, "successProbability": 0.1, "fidelity": 0.99, "classicalLatencyMs": 0.25 },
+      { "id": "relay-bob", "source": "relay", "target": "bob", "lengthKm": 25, "attenuationDbPerKm": 0.2, "successProbability": 0.1, "fidelity": 0.99, "classicalLatencyMs": 0.25 }
+    ],
+    "metadata": {
+      "useCase": "trusted-node QKD key relay"
+    }
+  },
+  {
+    "id": "repeater-chain-demo",
+    "name": "Four-node repeater chain",
+    "description": "Endpoint-to-endpoint entanglement through two repeater nodes.",
+    "nodes": [
+      { "id": "a", "label": "A", "type": "endpoint", "memoryLifetimeMs": 100, "memoryCount": 4, "x": 0, "y": 0 },
+      { "id": "r1", "label": "Repeater 1", "type": "repeater", "memoryLifetimeMs": 100, "memoryCount": 4, "x": 1, "y": 0 },
+      { "id": "r2", "label": "Repeater 2", "type": "repeater", "memoryLifetimeMs": 100, "memoryCount": 4, "x": 2, "y": 0 },
+      { "id": "b", "label": "B", "type": "endpoint", "memoryLifetimeMs": 100, "memoryCount": 4, "x": 3, "y": 0 }
+    ],
+    "links": [
+      { "id": "a-r1", "source": "a", "target": "r1", "lengthKm": 20, "attenuationDbPerKm": 0.2, "successProbability": 0.25, "fidelity": 0.97, "classicalLatencyMs": 0.2 },
+      { "id": "r1-r2", "source": "r1", "target": "r2", "lengthKm": 20, "attenuationDbPerKm": 0.2, "successProbability": 0.25, "fidelity": 0.97, "classicalLatencyMs": 0.2 },
+      { "id": "r2-b", "source": "r2", "target": "b", "lengthKm": 20, "attenuationDbPerKm": 0.2, "successProbability": 0.25, "fidelity": 0.97, "classicalLatencyMs": 0.2 }
+    ],
+    "metadata": {
+      "useCase": "entanglement routing and swapping"
+    }
+  },
+  {
+    "id": "mdi-star-demo",
+    "name": "MDI-QKD star topology",
+    "description": "Alice and Bob use an untrusted middle measurement node.",
+    "nodes": [
+      { "id": "alice", "label": "Alice", "type": "endpoint", "x": 0, "y": 0 },
+      { "id": "charlie", "label": "Untrusted measurement node", "type": "memory_node", "x": 1, "y": 0 },
+      { "id": "bob", "label": "Bob", "type": "endpoint", "x": 2, "y": 0 }
+    ],
+    "links": [
+      { "id": "alice-charlie", "source": "alice", "target": "charlie", "lengthKm": 10, "attenuationDbPerKm": 0.2, "successProbability": 0.3, "fidelity": 0.98, "classicalLatencyMs": 0.1 },
+      { "id": "bob-charlie", "source": "bob", "target": "charlie", "lengthKm": 10, "attenuationDbPerKm": 0.2, "successProbability": 0.3, "fidelity": 0.98, "classicalLatencyMs": 0.1 }
+    ],
+    "metadata": {
+      "useCase": "MDI-QKD teaching scenario"
+    }
+  }
+]

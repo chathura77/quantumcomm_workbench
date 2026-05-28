@@ -1,0 +1,74 @@
+[
+  {
+    "id": "netsquid",
+    "name": "NetSquid",
+    "type": "simulator",
+    "url": "https://netsquid.org/",
+    "summary": "Discrete-event quantum network simulator for modeling quantum networks with timing and noise effects.",
+    "tags": ["simulator", "quantum networks", "discrete event"]
+  },
+  {
+    "id": "sequence",
+    "name": "SeQUeNCe",
+    "type": "simulator",
+    "url": "https://github.com/sequence-toolbox/SeQUeNCe",
+    "summary": "Open-source simulator for quantum network communication.",
+    "tags": ["simulator", "open source", "quantum network"]
+  },
+  {
+    "id": "quisp",
+    "name": "QuISP",
+    "type": "simulator",
+    "url": "https://aqua.sfc.wide.ad.jp/quisp_website/",
+    "summary": "Quantum Internet Simulation Package for repeater-network studies.",
+    "tags": ["simulator", "repeaters", "quantum internet"]
+  },
+  {
+    "id": "qunetsim",
+    "name": "QuNetSim",
+    "type": "simulator",
+    "url": "https://github.com/tqsd/QuNetSim",
+    "summary": "Framework for simulating quantum network protocols at a higher abstraction layer.",
+    "tags": ["simulator", "protocols", "education"]
+  },
+  {
+    "id": "qkdnetsim",
+    "name": "QKDNetSim",
+    "type": "simulator",
+    "url": "https://www.qkdnetsim.info/",
+    "summary": "QKD network simulation toolkit associated with NS-3 style network simulation.",
+    "tags": ["QKD", "network simulation", "NS-3"]
+  },
+  {
+    "id": "etsi-qkd",
+    "name": "ETSI ISG QKD",
+    "type": "standard",
+    "url": "https://www.etsi.org/technologies/quantum-key-distribution",
+    "summary": "ETSI group producing specifications for quantum key distribution technologies and interfaces.",
+    "tags": ["standard", "QKD", "API"]
+  },
+  {
+    "id": "itu-y3803",
+    "name": "ITU-T Y.3803",
+    "type": "standard",
+    "url": "https://www.itu.int/rec/T-REC-Y.3803",
+    "summary": "Recommendation related to QKD network key management.",
+    "tags": ["standard", "QKD network", "key management"]
+  },
+  {
+    "id": "nist-pqc",
+    "name": "NIST Post-Quantum Cryptography Project",
+    "type": "standardization",
+    "url": "https://csrc.nist.gov/projects/post-quantum-cryptography",
+    "summary": "NIST project for standardizing post-quantum cryptographic algorithms.",
+    "tags": ["PQC", "standardization", "cryptography"]
+  },
+  {
+    "id": "nsa-qkd-guidance",
+    "name": "NSA QKD and Quantum Cryptography Guidance",
+    "type": "guidance",
+    "url": "https://www.nsa.gov/Cybersecurity/Quantum-Key-Distribution-QKD-and-Quantum-Cryptography-QC/",
+    "summary": "Public cybersecurity guidance discussing limitations and deployment cautions for QKD and quantum cryptography.",
+    "tags": ["guidance", "QKD", "security architecture"]
+  }
+]

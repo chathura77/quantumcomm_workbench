@@ -1,0 +1,720 @@
+openapi: 3.1.0
+info:
+  title: QuantumComm Workbench API
+  version: 0.1.0
+  description: Internal API contract for the QuantumComm Workbench MVP.
+servers:
+  - url: /api
+paths:
+  /simulations/qkd/link-budget:
+    post:
+      summary: Compute QKD link budget and approximate key rate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LinkBudgetInput'
+      responses:
+        '200':
+          description: Link budget result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkBudgetResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+  /simulations/qkd/qber-forensics:
+    post:
+      summary: Decompose QBER into simplified contributions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QberForensicsInput'
+      responses:
+        '200':
+          description: QBER forensics result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QberForensicsResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+  /simulations/qkd/post-processing:
+    post:
+      summary: Estimate QKD post-processing key length
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostProcessingInput'
+      responses:
+        '200':
+          description: Post-processing result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostProcessingResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+  /simulations/qkd/attack:
+    post:
+      summary: Run simulation-only QKD attack model
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttackInput'
+      responses:
+        '200':
+          description: Attack model result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttackResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+  /simulations/kms/run:
+    post:
+      summary: Run key-management simulation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KmsSimulationInput'
+      responses:
+        '200':
+          description: KMS simulation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KmsSimulationResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+  /simulations/network/route:
+    post:
+      summary: Rank quantum-network routes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteInput'
+      responses:
+        '200':
+          description: Route ranking result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+  /simulations/network/repeater-optimize:
+    post:
+      summary: Optimize simplified repeater chain
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RepeaterOptimizeInput'
+      responses:
+        '200':
+          description: Repeater optimization result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepeaterOptimizeResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+  /qkd-mock/status:
+    get:
+      summary: Get mock QKD key-pool status
+      responses:
+        '200':
+          description: Status result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyPoolStatus'
+  /qkd-mock/keys/request:
+    post:
+      summary: Request mock QKD key material
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KeyRequest'
+      responses:
+        '200':
+          description: Key request success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyRequestResponse'
+        '409':
+          description: Insufficient mock key material
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InsufficientKeyMaterialError'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+  /qkd-mock/keys/{keyId}:
+    get:
+      summary: Retrieve mock key by ID
+      parameters:
+        - name: keyId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Key descriptor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MockKeyDescriptor'
+        '404':
+          description: Key not found
+  /export/report:
+    post:
+      summary: Export reproducible run report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportExportInput'
+      responses:
+        '200':
+          description: Exported report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportExportResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+components:
+  responses:
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+  schemas:
+    ModelWarning:
+      type: object
+      required: [code, message, severity]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        severity:
+          type: string
+          enum: [info, warning, critical]
+    ValidationError:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          const: ValidationError
+        message:
+          type: string
+        issues:
+          type: array
+          items:
+            type: object
+    LinkBudgetInput:
+      type: object
+      required:
+        - protocol
+        - lengthKm
+        - fiberLossDbPerKm
+        - connectorLossDb
+        - sourceRateHz
+        - meanPhotonNumber
+        - detectorEfficiency
+        - darkCountProbability
+        - backgroundCountProbability
+        - misalignmentError
+        - basisSiftingFactor
+        - reconciliationEfficiency
+        - blockSize
+      properties:
+        protocol:
+          type: string
+          enum: [bb84, decoy_bb84, e91, bbm92, mdi_qkd, tf_qkd, cv_qkd]
+        lengthKm:
+          type: number
+          minimum: 0
+          maximum: 10000
+        fiberLossDbPerKm:
+          type: number
+          minimum: 0
+          maximum: 10
+        connectorLossDb:
+          type: number
+          minimum: 0
+          maximum: 100
+        sourceRateHz:
+          type: number
+          minimum: 1
+        meanPhotonNumber:
+          type: number
+          minimum: 0
+          maximum: 10
+        detectorEfficiency:
+          type: number
+          minimum: 0
+          maximum: 1
+        darkCountProbability:
+          type: number
+          minimum: 0
+          maximum: 1
+        backgroundCountProbability:
+          type: number
+          minimum: 0
+          maximum: 1
+        misalignmentError:
+          type: number
+          minimum: 0
+          maximum: 0.5
+        basisSiftingFactor:
+          type: number
+          minimum: 0
+          maximum: 1
+        reconciliationEfficiency:
+          type: number
+          minimum: 1
+          maximum: 5
+        blockSize:
+          type: integer
+          minimum: 1
+    LinkBudgetResult:
+      type: object
+      additionalProperties:
+        type: number
+    LinkBudgetResponse:
+      type: object
+      required: [input, result, assumptions, warnings, version]
+      properties:
+        input:
+          $ref: '#/components/schemas/LinkBudgetInput'
+        result:
+          $ref: '#/components/schemas/LinkBudgetResult'
+        assumptions:
+          type: array
+          items:
+            type: string
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModelWarning'
+        version:
+          type: string
+    QberForensicsInput:
+      type: object
+      required:
+        - measuredQber
+        - misalignmentError
+        - visibility
+        - darkCountProbability
+        - backgroundCountProbability
+        - detectorMismatch
+        - eveInterceptFraction
+        - signalDetectionProbability
+      properties:
+        measuredQber:
+          type: number
+          minimum: 0
+          maximum: 0.5
+        misalignmentError:
+          type: number
+          minimum: 0
+          maximum: 0.5
+        visibility:
+          type: number
+          minimum: 0
+          maximum: 1
+        darkCountProbability:
+          type: number
+          minimum: 0
+          maximum: 1
+        backgroundCountProbability:
+          type: number
+          minimum: 0
+          maximum: 1
+        detectorMismatch:
+          type: number
+          minimum: 0
+          maximum: 1
+        eveInterceptFraction:
+          type: number
+          minimum: 0
+          maximum: 1
+        signalDetectionProbability:
+          type: number
+          minimum: 0
+          maximum: 1
+    QberForensicsResponse:
+      type: object
+      properties:
+        input:
+          $ref: '#/components/schemas/QberForensicsInput'
+        result:
+          type: object
+        assumptions:
+          type: array
+          items:
+            type: string
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModelWarning'
+        version:
+          type: string
+    PostProcessingInput:
+      type: object
+      required:
+        - rawDetections
+        - basisSiftingFactor
+        - qber
+        - sampleFraction
+        - reconciliationEfficiency
+        - verificationBits
+        - authenticationBits
+        - securityMarginBits
+      properties:
+        rawDetections:
+          type: integer
+          minimum: 0
+        basisSiftingFactor:
+          type: number
+          minimum: 0
+          maximum: 1
+        qber:
+          type: number
+          minimum: 0
+          maximum: 0.5
+        sampleFraction:
+          type: number
+          minimum: 0
+          maximum: 1
+        reconciliationEfficiency:
+          type: number
+          minimum: 1
+          maximum: 5
+        verificationBits:
+          type: integer
+          minimum: 0
+        authenticationBits:
+          type: integer
+          minimum: 0
+        securityMarginBits:
+          type: integer
+          minimum: 0
+    PostProcessingResponse:
+      type: object
+      properties:
+        input:
+          $ref: '#/components/schemas/PostProcessingInput'
+        result:
+          type: object
+        assumptions:
+          type: array
+          items:
+            type: string
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModelWarning'
+        version:
+          type: string
+    AttackInput:
+      type: object
+      required: [attackType, parameters]
+      properties:
+        attackType:
+          type: string
+          enum: [intercept_resend, pns_risk, detector_mismatch, trojan_horse_risk, dos_background]
+        parameters:
+          type: object
+    AttackResponse:
+      type: object
+      properties:
+        input:
+          $ref: '#/components/schemas/AttackInput'
+        result:
+          type: object
+        assumptions:
+          type: array
+          items:
+            type: string
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModelWarning'
+        version:
+          type: string
+    KmsService:
+      type: object
+      required: [id, name, priority, requestRatePerSecond, bitsPerRequest]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        priority:
+          type: integer
+          minimum: 0
+        requestRatePerSecond:
+          type: number
+          minimum: 0
+        bitsPerRequest:
+          type: integer
+          minimum: 1
+    KmsSimulationInput:
+      type: object
+      required:
+        - durationSeconds
+        - timeStepSeconds
+        - initialBufferBits
+        - bufferCapacityBits
+        - generationRateBitsPerSecond
+        - keyTtlSeconds
+        - services
+      properties:
+        durationSeconds:
+          type: number
+          minimum: 1
+        timeStepSeconds:
+          type: number
+          minimum: 0.001
+        initialBufferBits:
+          type: number
+          minimum: 0
+        bufferCapacityBits:
+          type: number
+          minimum: 1
+        generationRateBitsPerSecond:
+          type: number
+          minimum: 0
+        keyTtlSeconds:
+          type: number
+          minimum: 1
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/KmsService'
+    KmsSimulationResponse:
+      type: object
+      properties:
+        input:
+          $ref: '#/components/schemas/KmsSimulationInput'
+        result:
+          type: object
+        assumptions:
+          type: array
+          items:
+            type: string
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModelWarning'
+        version:
+          type: string
+    RouteInput:
+      type: object
+      required: [scenario, sourceNodeId, targetNodeId, objective]
+      properties:
+        scenario:
+          type: object
+        sourceNodeId:
+          type: string
+        targetNodeId:
+          type: string
+        objective:
+          type: string
+          enum: [rate, fidelity, latency, balanced]
+    RouteResponse:
+      type: object
+      properties:
+        input:
+          $ref: '#/components/schemas/RouteInput'
+        result:
+          type: object
+        assumptions:
+          type: array
+          items:
+            type: string
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModelWarning'
+        version:
+          type: string
+    RepeaterOptimizeInput:
+      type: object
+      required:
+        - totalDistanceKm
+        - attenuationDbPerKm
+        - memoryLifetimeMs
+        - attemptRateHz
+        - targetFidelity
+        - maxRepeaters
+      properties:
+        totalDistanceKm:
+          type: number
+          minimum: 0
+        attenuationDbPerKm:
+          type: number
+          minimum: 0
+        memoryLifetimeMs:
+          type: number
+          minimum: 0
+        attemptRateHz:
+          type: number
+          minimum: 1
+        targetFidelity:
+          type: number
+          minimum: 0
+          maximum: 1
+        maxRepeaters:
+          type: integer
+          minimum: 0
+          maximum: 100
+    RepeaterOptimizeResponse:
+      type: object
+      properties:
+        input:
+          $ref: '#/components/schemas/RepeaterOptimizeInput'
+        result:
+          type: object
+        assumptions:
+          type: array
+          items:
+            type: string
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModelWarning'
+        version:
+          type: string
+    KeyPoolStatus:
+      type: object
+      required: [poolId, availableBits, capacityBits, refillRateBitsPerSecond, status, demoOnly]
+      properties:
+        poolId:
+          type: string
+        availableBits:
+          type: integer
+        capacityBits:
+          type: integer
+        refillRateBitsPerSecond:
+          type: number
+        oldestKeyAgeSeconds:
+          type: number
+        status:
+          type: string
+          enum: [ready, low, exhausted]
+        demoOnly:
+          type: boolean
+    KeyRequest:
+      type: object
+      required: [applicationId, keyLengthBits, numberOfKeys, priority]
+      properties:
+        applicationId:
+          type: string
+        keyLengthBits:
+          type: integer
+          minimum: 1
+          maximum: 1048576
+        numberOfKeys:
+          type: integer
+          minimum: 1
+          maximum: 100
+        priority:
+          type: integer
+          minimum: 0
+          maximum: 10
+    MockKeyDescriptor:
+      type: object
+      required: [keyId, keyLengthBits, createdAt, expiresAt, keyMaterial, demoOnly]
+      properties:
+        keyId:
+          type: string
+        keyLengthBits:
+          type: integer
+        createdAt:
+          type: string
+        expiresAt:
+          type: string
+        keyMaterial:
+          type: string
+        demoOnly:
+          type: boolean
+    KeyRequestResponse:
+      type: object
+      required: [keys, remainingPoolBits, demoOnly]
+      properties:
+        keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/MockKeyDescriptor'
+        remainingPoolBits:
+          type: integer
+        demoOnly:
+          type: boolean
+    InsufficientKeyMaterialError:
+      type: object
+      required: [error, availableBits, requestedBits]
+      properties:
+        error:
+          const: InsufficientKeyMaterial
+        availableBits:
+          type: integer
+        requestedBits:
+          type: integer
+    ReportExportInput:
+      type: object
+      required: [toolId, title, input, result, assumptions, warnings, format]
+      properties:
+        toolId:
+          type: string
+        title:
+          type: string
+        input:
+          type: object
+        result:
+          type: object
+        assumptions:
+          type: array
+          items:
+            type: string
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModelWarning'
+        format:
+          type: string
+          enum: [json, markdown]
+    ReportExportResponse:
+      type: object
+      required: [content, filename, mimeType]
+      properties:
+        content:
+          type: string
+        filename:
+          type: string
+        mimeType:
+          type: string

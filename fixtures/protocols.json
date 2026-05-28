@@ -1,0 +1,74 @@
+[
+  {
+    "id": "bb84",
+    "name": "BB84",
+    "category": "prepare-and-measure QKD",
+    "summary": "Alice encodes random bits in nonorthogonal bases and Bob measures in randomly chosen bases; mismatched bases are discarded.",
+    "coreConcepts": ["basis sifting", "QBER", "privacy amplification", "authentication"],
+    "relatedTools": ["link-budget", "qber-forensics", "post-processing", "attack-explorer"]
+  },
+  {
+    "id": "decoy_bb84",
+    "name": "Decoy-state BB84",
+    "category": "prepare-and-measure QKD",
+    "summary": "A weak-coherent-pulse QKD method using signal and decoy intensities to estimate single-photon contributions and reduce photon-number-splitting risk.",
+    "coreConcepts": ["weak coherent pulses", "decoy intensities", "single-photon yield", "PNS mitigation"],
+    "relatedTools": ["link-budget", "attack-explorer"]
+  },
+  {
+    "id": "e91",
+    "name": "E91",
+    "category": "entanglement-based QKD",
+    "summary": "An entanglement-based protocol using correlations and Bell inequality tests to detect eavesdropping under idealized assumptions.",
+    "coreConcepts": ["entanglement", "Bell test", "CHSH", "correlations"],
+    "relatedTools": ["entanglement-routing", "qber-forensics"]
+  },
+  {
+    "id": "bbm92",
+    "name": "BBM92",
+    "category": "entanglement-based QKD",
+    "summary": "An entanglement-based protocol closely related to BB84 where correlated measurement outcomes are used for key generation.",
+    "coreConcepts": ["entanglement source", "basis sifting", "QBER"],
+    "relatedTools": ["link-budget", "entanglement-routing"]
+  },
+  {
+    "id": "mdi_qkd",
+    "name": "MDI-QKD",
+    "category": "measurement-device-independent QKD",
+    "summary": "A protocol family designed to remove detector side channels by using an untrusted measurement station.",
+    "coreConcepts": ["Bell-state measurement", "untrusted relay", "detector side-channel mitigation"],
+    "relatedTools": ["link-budget", "network-scenario-builder"]
+  },
+  {
+    "id": "tf_qkd",
+    "name": "Twin-field QKD",
+    "category": "long-distance QKD",
+    "summary": "A protocol family using single-photon interference at a middle station to improve long-distance scaling under suitable assumptions.",
+    "coreConcepts": ["single-photon interference", "phase stabilization", "middle station"],
+    "relatedTools": ["phase-encoding-calculator", "channel-planner"]
+  },
+  {
+    "id": "cv_qkd",
+    "name": "CV-QKD",
+    "category": "continuous-variable QKD",
+    "summary": "A QKD family using quadrature modulation and coherent or homodyne/heterodyne measurements instead of discrete photon encoding.",
+    "coreConcepts": ["quadratures", "Gaussian modulation", "excess noise", "reconciliation efficiency"],
+    "relatedTools": ["link-budget", "post-processing"]
+  },
+  {
+    "id": "teleportation",
+    "name": "Quantum teleportation",
+    "category": "quantum communication primitive",
+    "summary": "Transfers an unknown quantum state using shared entanglement and classical communication.",
+    "coreConcepts": ["Bell measurement", "classical feed-forward", "shared entanglement"],
+    "relatedTools": ["entanglement-routing", "scenario-builder"]
+  },
+  {
+    "id": "entanglement_swapping",
+    "name": "Entanglement swapping",
+    "category": "quantum repeater primitive",
+    "summary": "Creates entanglement between distant nodes by performing Bell-state measurements on intermediate entangled pairs.",
+    "coreConcepts": ["Bell-state measurement", "repeaters", "fidelity", "classical signaling"],
+    "relatedTools": ["entanglement-routing", "repeater-optimizer"]
+  }
+]

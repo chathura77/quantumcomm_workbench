@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quantumcomm-workbench.local/schemas/quantum-network-scenario.schema.json",
+  "title": "Quantum Network Scenario",
+  "type": "object",
+  "required": ["id", "name", "nodes", "links"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/node"
+      }
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/link"
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "required": ["id", "label", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "enum": ["endpoint", "trusted_node", "repeater", "satellite", "ground_station", "memory_node"]
+        },
+        "memoryLifetimeMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "memoryCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      }
+    },
+    "link": {
+      "type": "object",
+      "required": ["id", "source", "target", "lengthKm"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lengthKm": {
+          "type": "number",
+          "minimum": 0
+        },
+        "attenuationDbPerKm": {
+          "type": "number",
+          "minimum": 0
+        },
+        "lossDb": {
+          "type": "number",
+          "minimum": 0
+        },
+        "successProbability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "fidelity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "classicalLatencyMs": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}
