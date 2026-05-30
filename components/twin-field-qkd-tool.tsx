@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import presetsJson from "@/fixtures/presets.json";
+import { ShareUrlControls, useShareableToolState } from "@/components/shareable-tool-state";
 import { buildRunReport } from "@/lib/export/report";
 import { createSavedRunRecord, SAVED_RUNS_STORAGE_KEY, sortSavedRuns } from "@/lib/export/savedRuns";
 import { estimateTwinFieldQkd } from "@/lib/qkd/twinFieldQkd";
@@ -147,7 +148,7 @@ function ExportPanel({
 }
 
 export function TwinFieldQkdTool() {
-  const [input, setInput] = useState<TwinFieldQkdInput>(twinFieldPresets[0].input);
+  const { state: input, setState: setInput, shareMessage, copyShareUrl } = useShareableToolState<TwinFieldQkdInput>("input", twinFieldPresets[0].input);
   const response = useMemo(() => estimateTwinFieldQkd(input), [input]);
   const set = (patch: Partial<TwinFieldQkdInput>) => setInput((current) => ({ ...current, ...patch }));
   const formulas = [
@@ -169,6 +170,7 @@ export function TwinFieldQkdTool() {
       title="Twin-field QKD estimator"
       description="Estimate middle-station interference, phase-stability penalties, and a cautious secret-key-rate proxy for a twin-field QKD teaching setup."
       inputs={fieldList(<>
+        <ShareUrlControls onCopy={copyShareUrl} message={shareMessage} />
         <SelectField
           label="Preset"
           value="custom"

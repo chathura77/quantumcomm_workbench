@@ -96,7 +96,7 @@ Current progress notes:
 - Tool result panels that already support export now also support local browser save, preserving inputs, results, assumptions, warnings, formulas, and model version under a shared saved-run history key.
 - The report generator can now preload locally saved runs, compare two saved runs, duplicate prior runs for branch analysis, and delete stale local history entries without requiring pasted JSON first.
 - The network scenario builder now supports a local saved scenario library with load, duplicate, delete, and exported warning counts, plus saved-scenario bundle import/export for browser-local portability.
-- The link-budget and finite-key BB84 calculators now keep their current teaching inputs in shareable URL state and expose a copy-link action that never includes key material or telemetry.
+- The link-budget, finite-key BB84, CV-QKD, MDI-QKD, twin-field QKD, and entanglement-based estimator pages now keep their current teaching inputs in shareable URL state and expose a copy-link action that never includes key material or telemetry.
 
 ## Phase 8 - QKD model depth v2
 

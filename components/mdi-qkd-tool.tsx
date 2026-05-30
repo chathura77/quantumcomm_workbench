@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import presetsJson from "@/fixtures/presets.json";
+import { ShareUrlControls, useShareableToolState } from "@/components/shareable-tool-state";
 import { buildRunReport } from "@/lib/export/report";
 import { createSavedRunRecord, SAVED_RUNS_STORAGE_KEY, sortSavedRuns } from "@/lib/export/savedRuns";
 import { estimateMdiQkd } from "@/lib/qkd/mdiQkd";
@@ -147,7 +148,7 @@ function ExportPanel({
 }
 
 export function MdiQkdTool() {
-  const [input, setInput] = useState<MdiQkdInput>(mdiPresets[0].input);
+  const { state: input, setState: setInput, shareMessage, copyShareUrl } = useShareableToolState<MdiQkdInput>("input", mdiPresets[0].input);
   const response = useMemo(() => estimateMdiQkd(input), [input]);
   const set = (patch: Partial<MdiQkdInput>) => setInput((current) => ({ ...current, ...patch }));
   const formulas = [
@@ -169,6 +170,7 @@ export function MdiQkdTool() {
       title="MDI-QKD relay estimator"
       description="Estimate two-arm loss, relay coincidence probability, QBER, and asymptotic key-rate intuition for a measurement-device-independent QKD teaching setup."
       inputs={fieldList(<>
+        <ShareUrlControls onCopy={copyShareUrl} message={shareMessage} />
         <SelectField
           label="Preset"
           value="custom"

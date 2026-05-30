@@ -925,6 +925,26 @@ test("JSON-driven tools surface invalid-state recovery copy", () => {
   assert.ok(finiteKeyHtml.includes("Shareable URL state"));
   assert.ok(finiteKeyHtml.includes("Copy share URL"));
 
+  const cvTool = projectRequire("components/cv-qkd-tool.tsx");
+  const cvHtml = renderToStaticMarkup(React.createElement(cvTool.CvQkdTool));
+  assert.ok(cvHtml.includes("Shareable URL state"));
+  assert.ok(cvHtml.includes("Copy share URL"));
+
+  const mdiTool = projectRequire("components/mdi-qkd-tool.tsx");
+  const mdiHtml = renderToStaticMarkup(React.createElement(mdiTool.MdiQkdTool));
+  assert.ok(mdiHtml.includes("Shareable URL state"));
+  assert.ok(mdiHtml.includes("Copy share URL"));
+
+  const twinFieldTool = projectRequire("components/twin-field-qkd-tool.tsx");
+  const twinFieldHtml = renderToStaticMarkup(React.createElement(twinFieldTool.TwinFieldQkdTool));
+  assert.ok(twinFieldHtml.includes("Shareable URL state"));
+  assert.ok(twinFieldHtml.includes("Copy share URL"));
+
+  const entanglementTool = projectRequire("components/entanglement-qkd-tool.tsx");
+  const entanglementHtml = renderToStaticMarkup(React.createElement(entanglementTool.EntanglementQkdTool));
+  assert.ok(entanglementHtml.includes("Shareable URL state"));
+  assert.ok(entanglementHtml.includes("Copy share URL"));
+
   const etsiHtml = renderToStaticMarkup(React.createElement(tools.EtsiApiSandboxTool));
   assert.ok(etsiHtml.includes("Download example bundle"));
   assert.ok(etsiHtml.includes("Mock API examples"));

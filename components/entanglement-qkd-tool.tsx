@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import presetsJson from "@/fixtures/presets.json";
+import { ShareUrlControls, useShareableToolState } from "@/components/shareable-tool-state";
 import { buildRunReport } from "@/lib/export/report";
 import { createSavedRunRecord, SAVED_RUNS_STORAGE_KEY, sortSavedRuns } from "@/lib/export/savedRuns";
 import { estimateEntanglementQkd } from "@/lib/qkd/entanglementQkd";
@@ -147,7 +148,7 @@ function ExportPanel({
 }
 
 export function EntanglementQkdTool() {
-  const [input, setInput] = useState<EntanglementQkdInput>(entanglementPresets[0].input);
+  const { state: input, setState: setInput, shareMessage, copyShareUrl } = useShareableToolState<EntanglementQkdInput>("input", entanglementPresets[0].input);
   const response = useMemo(() => estimateEntanglementQkd(input), [input]);
   const set = (patch: Partial<EntanglementQkdInput>) => setInput((current) => ({ ...current, ...patch }));
   const formulas = [
@@ -170,6 +171,7 @@ export function EntanglementQkdTool() {
       title="Entanglement-based BBM92 and E91 estimator"
       description="Estimate source-in-the-middle coincidence rates, QBER, and Bell-correlation teaching outputs while keeping entanglement-based assumptions separate from prepare-and-measure BB84."
       inputs={fieldList(<>
+        <ShareUrlControls onCopy={copyShareUrl} message={shareMessage} />
         <SelectField
           label="Preset"
           value="custom"

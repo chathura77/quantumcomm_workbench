@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import presetsJson from "@/fixtures/presets.json";
+import { ShareUrlControls, useShareableToolState } from "@/components/shareable-tool-state";
 import { buildRunReport } from "@/lib/export/report";
 import { createSavedRunRecord, SAVED_RUNS_STORAGE_KEY, sortSavedRuns } from "@/lib/export/savedRuns";
 import { estimateCvQkd } from "@/lib/qkd/cvQkd";
@@ -147,7 +148,7 @@ function ExportPanel({
 }
 
 export function CvQkdTool() {
-  const [input, setInput] = useState<CvQkdInput>(cvQkdPresets[0].input);
+  const { state: input, setState: setInput, shareMessage, copyShareUrl } = useShareableToolState<CvQkdInput>("input", cvQkdPresets[0].input);
   const response = useMemo(() => estimateCvQkd(input), [input]);
   const set = (patch: Partial<CvQkdInput>) => setInput((current) => ({ ...current, ...patch }));
   const formulas = [
@@ -169,6 +170,7 @@ export function CvQkdTool() {
       title="CV-QKD teaching estimator"
       description="Estimate transmittance, SNR, covariance-style observables, and a cautious secret-key-rate proxy for a continuous-variable QKD teaching link."
       inputs={fieldList(<>
+        <ShareUrlControls onCopy={copyShareUrl} message={shareMessage} />
         <SelectField
           label="Preset"
           value="custom"

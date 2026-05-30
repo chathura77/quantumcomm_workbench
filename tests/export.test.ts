@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { buildShareableStateUrl, decodeShareableState, encodeShareableState } from "../lib/export/shareableState";
 import { compareSavedRuns, createSavedRunRecord, duplicateSavedRun, parseSavedRun, serializeSavedRun, sortSavedRuns } from "../lib/export/savedRuns";
 
 describe("saved runs", () => {
@@ -73,5 +74,20 @@ describe("saved runs", () => {
       assumptionDelta: -1,
       warningDelta: -1
     });
+  });
+
+  it("encodes shareable calculator state into stable teaching URLs", () => {
+    const state = {
+      aliceLengthKm: 120,
+      bobLengthKm: 120,
+      stationMode: "untrusted",
+      blockSize: 1000000
+    };
+
+    const encoded = encodeShareableState(state);
+    expect(decodeShareableState<typeof state>(encoded)).toEqual(state);
+    expect(buildShareableStateUrl("/tools/twin-field-qkd-estimator", "input", state)).toBe(
+      `/tools/twin-field-qkd-estimator?input=${encoded}`
+    );
   });
 });
