@@ -68,19 +68,89 @@ Distance sweep:
 
 MVP may expose decoy-state BB84 but should label it as simplified.
 
-Use the same core link-budget result and provide an optional lower-bound proxy:
+Use the same core link-budget result and provide an explicit lower-bound teaching proxy:
 
 ```text
 Q_mu = p_click
 E_mu = qber
-Y_1_proxy = eta_total + p_noise
-e_1_proxy = (e_det * eta_total + 0.5 * p_noise) / max(Y_1_proxy, epsilon)
-Q_1_proxy = mu * exp(-mu) * Y_1_proxy
-R_proxy = q_basis * max(0, -Q_mu * f_ec * h2(E_mu) + Q_1_proxy * (1 - h2(e_1_proxy)))
+P_1 = mu * exp(-mu)
+P_multi = 1 - exp(-mu) * (1 + mu)
+Y_0_proxy = p_noise
+Y_1_lower = eta_total + Y_0_proxy * (1 - eta_total)
+e_1_upper = (e_det * eta_total + 0.5 * Y_0_proxy + p_after) / max(Y_1_lower, epsilon)
+Q_1_lower = P_1 * Y_1_lower
+R_proxy = q_basis * max(0, -Q_mu * f_ec * h2(E_mu) + Q_1_lower * (1 - h2(e_1_upper)))
 secretKeyRateHz = R_src * R_proxy
 ```
 
-Warn that this is a pedagogical proxy, not a full decoy-state finite-key proof.
+Expose the intermediate teaching outputs so the UI and exports can show:
+
+- singlePhotonEmissionProbability = `P_1`
+- multiPhotonEmissionProbability = `P_multi`
+- singlePhotonYieldLowerBound = `Y_1_lower`
+- singlePhotonErrorUpperBound = `e_1_upper`
+- singlePhotonGainLowerBound = `Q_1_lower`
+
+Warn that this is a pedagogical lower-bound proxy, not a full decoy-state finite-key proof or optimization routine.
+
+## Finite-key BB84 teaching model
+
+The finite-key BB84 teaching estimator reuses the simplified link-budget result, then adds explicit finite-size bookkeeping terms.
+
+Inputs in addition to the link-budget fields:
+
+- sampleFraction
+- epsilonCorrectness
+- epsilonSecrecy
+- epsilonParameterEstimation
+
+Additional hardware-proxy controls now supported through the shared link-budget kernel:
+
+- detectorDeadTimeNs
+- afterpulseProbability
+- senderZBasisProbability
+- receiverZBasisProbability
+
+Core teaching calculations:
+
+```text
+p_after = afterpulseProbability * (p_signal,base + p_noise,base)
+availability_dead = 1 / (1 + sourceRateHz * p_click,pre * detectorDeadTimeNs * 1e-9)
+basisAgreement = pZ_A pZ_B + (1 - pZ_A)(1 - pZ_B)
+q_basis,eff = q_basis * basisAgreement / 0.5
+n_emit = floor(blockSize)
+n_raw = floor(n_emit * p_click)
+n_sift = floor(n_raw * q_basis,eff)
+n_pe = ceil(n_sift * sampleFraction)
+n_key = max(0, n_sift - n_pe)
+delta_pe = sqrt(ln(2 / epsilon_pe) / (2 n_pe))
+delta_sec = sqrt(ln(2 / epsilon_sec) / (2 n_key))
+Q_upper = min(0.5, Q_obs + delta_pe + delta_sec)
+l = max(0, n_key - leak_EC - n_key * h2(Q_upper) - log2(2 / epsilon_correct) - 2 log2(1 / epsilon_sec))
+```
+
+Teaching sensitivity sweeps:
+
+- Distance sweep varies `lengthKm`.
+- Added-loss sweep varies additional component loss relative to the current baseline.
+- Observed-QBER sweep varies misalignment input and reports the resulting observed QBER on the x-axis.
+- Detector-efficiency sweep varies `detectorEfficiency`.
+- Block-size sweep varies `blockSize` logarithmically.
+
+Interpret the new hardware terms as teaching proxies only:
+
+- `detectorDeadTimeNs` uses a non-paralyzable detector-availability approximation.
+- `afterpulseProbability` adds click-correlated noise before the dead-time availability factor is applied.
+- Basis bias changes the effective sifted fraction through sender and receiver Z-basis probabilities; it is not a full biased-basis finite-key proof.
+
+Teaching uncertainty band:
+
+- Over the distance sweep, report three variants:
+- Optimistic: privacy amplification uses `Q_obs`.
+- Baseline: privacy amplification uses `Q_obs + delta_pe`.
+- Conservative: privacy amplification uses `Q_obs + delta_pe + delta_sec`.
+
+Label this as a statistical teaching band, not a confidence interval or deployment calibration envelope.
 
 ## QBER forensics model
 
@@ -255,6 +325,50 @@ Use user-provided geometric loss, pointing loss, atmospheric loss, receiver opti
 Satellite-style:
 
 Use pass duration, average loss, background probability, pointing loss, and duty cycle. Label as coarse.
+
+## MDI-QKD relay estimator
+
+The MDI-QKD teaching estimator uses two independent loss arms that meet at a middle Bell-state-measurement relay.
+
+Inputs:
+
+- Alice arm length `L_A`
+- Bob arm length `L_B`
+- shared fiber attenuation `alpha`
+- Alice and Bob connector/component losses `L_conn,A`, `L_conn,B`
+- relay detector efficiency `eta_det,relay`
+- mean photon numbers `mu_A`, `mu_B`
+- Bell-state-measurement efficiency `eta_BSM`
+- interference visibility `V`
+- relay dark/background probabilities
+- misalignment error `e_det`
+- basis sifting factor `q_basis`
+- reconciliation efficiency `f_ec`
+
+Teaching calculations:
+
+```text
+loss_A = alpha * L_A + L_conn,A
+loss_B = alpha * L_B + L_conn,B
+eta_A = 10^(-loss_A / 10)
+eta_B = 10^(-loss_B / 10)
+p_A = 1 - exp(-mu_A * eta_A * eta_det,relay)
+p_B = 1 - exp(-mu_B * eta_B * eta_det,relay)
+symmetry = min(eta_A, eta_B) / max(eta_A, eta_B)
+interferencePenalty = V * sqrt(symmetry)
+p_joint = p_A * p_B * eta_BSM * interferencePenalty
+p_noise = 2 * (p_dark,relay + p_bg)
+Q = (p_joint * ((1 - V) / 2 + e_det) + 0.5 * p_noise) / max(p_joint + p_noise, epsilon)
+R_secret = R_src * q_basis * (p_joint + p_noise) * max(0, 1 - f_ec h2(Q) - h2(Q))
+```
+
+Warnings:
+
+- Low symmetry means the two relay arms are imbalanced.
+- Low visibility warns that interference alignment dominates the estimate.
+- QBER above common BB84-style teaching thresholds is flagged as marginal or zero-key territory.
+
+Label the result as a non-certified teaching proxy rather than a full MDI-QKD finite-key or decoy-state proof.
 
 ## Entanglement routing
 

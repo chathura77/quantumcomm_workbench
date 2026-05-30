@@ -191,6 +191,8 @@ Output:
 
 These endpoints simulate ETSI-style key-delivery behavior. They are demo-only and do not produce production cryptographic material.
 
+The in-app ETSI sandbox and standards checker ship with downloadable static example payloads for status, request-success, insufficient-material, and descriptor retrieval drills. Those example bundles are teaching fixtures only and do not imply certified interoperability.
+
 ### `GET /api/qkd-mock/status`
 
 Returns key pool status.

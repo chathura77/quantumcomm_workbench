@@ -1,47 +1,45 @@
-# QuantumComm Workbench Codex Build Pack
+# QuantumComm Workbench
 
-This pack is designed to be copied into a new or existing repository and used with Codex to build the QuantumComm Workbench website.
+QuantumComm Workbench is a Next.js + TypeScript MVP for quantum communication learning, engineering estimates, mock QKD integration, and quantum-network scenario exploration.
 
-## Recommended use
+The app is intentionally cautious: outputs are educational and research-oriented estimates, not certified security guarantees or production cryptographic validation.
 
-1. Create an empty Git repository.
-2. Copy every file in this pack into the repository root.
-3. Start Codex in that repository.
-4. Paste `CODEX_MASTER_PROMPT.md` as the first task.
-5. After the first implementation pass, run the tasks in `tasks/` one by one.
+## Setup
 
-Codex reads `AGENTS.md` before doing work, so keep that file in the repository root. It contains the persistent engineering instructions for the project.
+```bash
+npm install
+npm run dev
+```
 
-## Intended product
+Open `http://localhost:3000`.
 
-QuantumComm Workbench is a web platform for quantum communication researchers, educators, engineers, and enthusiasts. It includes:
+## Verification
 
-- Educational protocol labs: BB84, E91, BBM92, MDI-QKD, CV-QKD, teleportation, entanglement swapping.
-- QKD engineering tools: link budget, secret-key-rate estimates, QBER forensics, post-processing, attack explorer, channel planners.
-- Standards and integration tools: ETSI-style QKD key-delivery mock API, key-management simulator, conformance checker.
-- Quantum network tools: scenario builder, entanglement routing sandbox, repeater-chain optimizer, cross-simulator benchmark hub.
-- Research utilities: resource map, paper-to-parameter extractor, reproducible report/notebook generator.
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+```
 
-## File map
+For responsive/manual UI review after layout or shared-component changes, use `docs/VISUAL_QA.md`.
 
-- `CODEX_MASTER_PROMPT.md`: paste this into Codex for the initial build.
-- `AGENTS.md`: persistent Codex project instructions.
-- `docs/PRODUCT_SPEC.md`: product requirements and user personas.
-- `docs/ARCHITECTURE.md`: recommended stack and repo structure.
-- `docs/ROUTES_AND_PAGES.md`: site map and page-level behavior.
-- `docs/API_SPEC.md`: internal API endpoints and semantics.
-- `docs/DATA_MODELS.md`: TypeScript domain models.
-- `docs/SIMULATION_SPEC.md`: simulation kernels and formulas.
-- `docs/UI_SPEC.md`: interface and component requirements.
-- `docs/ACCEPTANCE_TESTS.md`: acceptance criteria and tests.
-- `docs/ROADMAP.md`: phased implementation plan.
-- `docs/RESEARCH_SOURCES.md`: sources and domain references to cite in the app.
-- `contracts/openapi.yaml`: API contract for calculator and mock QKD endpoints.
-- `contracts/quantum-network-scenario.schema.json`: reusable scenario schema.
-- `contracts/simulation-job.schema.json`: simulation job schema.
-- `fixtures/*.json`: seed resources, protocols, and sample scenarios.
-- `tasks/*.md`: follow-up Codex tasks for iterative implementation.
+## Implemented MVP areas
 
-## Scope control
+- Learn pages for BB84, E91, BBM92, decoy-state BB84, MDI-QKD, TF-QKD, CV-QKD, teleportation, entanglement swapping, and quantum repeaters.
+- QKD engineering tools: link budget, finite-key BB84 teaching estimator, QBER forensics, post-processing, attack explorer, phase encoding, channel planner, paper extractor, and report generator.
+- Standards and integration tools: ETSI-style mock QKD API sandbox, KMS simulator, standards conformance checker, and hybrid PQC + QKD decision tool.
+- Network tools: scenario builder, entanglement routing, repeater optimizer, and benchmark hub with export placeholders for external simulators.
+- API routes under `/api/simulations/*`, `/api/qkd-mock/*`, and `/api/export/report`.
 
-The first version should be a polished, working MVP with all pages present and the most important tools functional using transparent simplified models. Advanced physical models, external simulator adapters, and full cryptographic implementations can be added incrementally. Every page should clearly label assumptions and avoid presenting simplified educational calculations as certified security analyses.
+## Key files
+
+- Pure kernels: `lib/qkd`, `lib/kms`, `lib/network`, `lib/standards`.
+- Validation: `lib/validation/schemas.ts`.
+- UI routes: `app/`.
+- Seed fixtures: `fixtures/`.
+- Contracts and docs: `contracts/`, `docs/`.
+
+## Model limitations
+
+Read `docs/MODEL_LIMITATIONS.md` before interpreting results. The MVP favors transparent formulas and reproducible exports over research-grade physical modeling.

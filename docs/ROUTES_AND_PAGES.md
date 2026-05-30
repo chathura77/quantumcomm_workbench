@@ -14,7 +14,7 @@ Footer:
 
 - Disclaimer
 - References
-- GitHub/source link placeholder
+- Source repository
 - Model limitations
 
 ## `/`
@@ -110,6 +110,18 @@ Required presets:
 - Metro fiber, 25 km.
 - Long fiber, 100 km.
 - Free-space demo, 1 km.
+
+## `/tools/finite-key-bb84`
+
+Finite-key BB84 teaching estimator with explicit security parameters.
+
+Outputs:
+
+- Correctness, secrecy, and parameter-estimation epsilon controls.
+- Finite-size penalty accounting in bits.
+- Detector dead-time, afterpulsing, and basis-bias teaching proxies.
+- Sensitivity sweeps for distance, loss, QBER, detector efficiency, and block size.
+- Uncertainty-band chart with clear non-certified-model language.
 
 ## `/tools/qber-forensics`
 
@@ -212,6 +224,17 @@ Outputs:
 - Red flags.
 - Explanation of assumptions.
 
+## `/tools/openapi-viewer`
+
+Internal contract viewer for the local mock APIs and simulation endpoints.
+
+Outputs:
+
+- Contract title, version, and server roots.
+- Endpoint inventory with method, path, request schema, response codes, and path-parameter summary.
+- Schema inventory with required fields and property lists.
+- Raw checked-in `contracts/openapi.yaml` text for audit and debugging.
+
 ## `/tools/phase-encoding-calculator`
 
 Mach-Zehnder and phase-encoding design helper.
@@ -235,6 +258,54 @@ Outputs:
 - Link availability notes.
 - Background/noise contribution.
 - Secure-key-rate estimate using simplified QKD model.
+
+## `/tools/mdi-qkd-estimator`
+
+Two-arm teaching estimator for measurement-device-independent QKD.
+
+Outputs:
+
+- Alice and Bob arm loss budgets into the middle relay.
+- Relay-arm symmetry and interference-visibility penalty.
+- Joint Bell-state announcement probability.
+- Relay-noise-driven QBER proxy.
+- Asymptotic secret-key-rate teaching estimate with explicit relay assumptions.
+
+## `/tools/twin-field-qkd-estimator`
+
+Twin-field teaching estimator for middle-station interference and phase-stability limits.
+
+Outputs:
+
+- Alice and Bob arm loss budgets into the central interference station.
+- Phase-tracking efficiency, RMS phase-error, and post-selection teaching penalties.
+- Middle-station click probability, QBER proxy, and secret-key-rate teaching estimate.
+- Symmetry and interference penalties across a total-distance sweep.
+- Explicit language that TF-QKD advantages depend on strong phase control, decoy analysis, and non-certified assumptions.
+
+## `/tools/cv-qkd-estimator`
+
+Continuous-variable QKD teaching estimator.
+
+Outputs:
+
+- Channel transmittance and total loss.
+- Excess-noise, receiver-noise, and total-noise accounting in shot-noise units.
+- SNR, mutual-information proxy, and Eve-information/Holevo-style teaching proxy.
+- Covariance-style received-variance, covariance, and correlation outputs.
+- Distance sweep for SNR and secret-key-rate intuition with explicit trusted-receiver assumptions.
+
+## `/tools/entanglement-qkd-estimator`
+
+Entanglement-based BBM92 and E91 teaching estimator.
+
+Outputs:
+
+- Separate Alice and Bob arm loss budgets from a source-in-the-middle model.
+- Pair-collection and accidental-coincidence probability accounting.
+- QBER, sifted/key-generation rates, and asymptotic secret-key-rate teaching output.
+- CHSH-style Bell-score proxy and Bell-violation margin for E91-style monitoring.
+- Clear language that entanglement-based assumptions differ from prepare-and-measure BB84 and remain non-certified.
 
 ## `/tools/paper-parameter-extractor`
 
@@ -302,7 +373,8 @@ For MVP:
 
 - Built-in simplified engine.
 - Export scenario JSON.
-- Export adapter placeholders for SeQUeNCe, QuISP, NetSquid/SquidASM, QKDNetSim with clear TODO boundaries.
+- Export concrete simulator-mapping JSON for SeQUeNCe, QuISP, NetSquid/SquidASM, and QKDNetSim.
+- Show per-adapter validation status and mapping assumptions before download.
 
 ## `/resources`
 
@@ -310,6 +382,7 @@ Resource map.
 
 Subpages:
 
+- `/resources/model-limitations`
 - `/resources/simulators`
 - `/resources/standards`
 - `/resources/protocols`

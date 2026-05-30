@@ -104,3 +104,4 @@ Test case:
 5. Open `/tools/kms-simulator`, add a high-consumption service, verify denial/exhaustion output.
 6. Open `/networks/scenario-builder`, import sample scenario, export it, then run route ranking.
 7. Open `/tools/report-generator`, paste exported JSON, produce Markdown report.
+8. Run the desktop/tablet/mobile checklist in `docs/VISUAL_QA.md` after shared UI or layout changes.
