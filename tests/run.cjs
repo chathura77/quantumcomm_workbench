@@ -934,6 +934,10 @@ test("phase 13 CI and release artifacts are checked in", () => {
   const packageJson = JSON.parse(fs.readFileSync(path.join(projectRoot, "package.json"), "utf8"));
   assert.equal(packageJson.scripts["test:e2e"], "node tests/e2e-smoke.cjs");
 
+  const smokeScript = fs.readFileSync(path.join(projectRoot, "tests", "e2e-smoke.cjs"), "utf8");
+  assert.ok(smokeScript.includes("const requestedPort = configuredPort ?? 0;"));
+  assert.ok(smokeScript.includes("baseUrl = `http://${host}:${address.port}`;"));
+
   const ciWorkflow = fs.readFileSync(path.join(projectRoot, ".github", "workflows", "ci.yml"), "utf8");
   assert.ok(ciWorkflow.includes("npm ci"));
   assert.ok(ciWorkflow.includes("npm run lint"));

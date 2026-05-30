@@ -6,8 +6,8 @@ const next = require("next");
 
 const projectRoot = path.resolve(__dirname, "..");
 const host = "127.0.0.1";
-const port = Number(process.env.SMOKE_PORT ?? 3100);
-const baseUrl = process.env.SMOKE_BASE_URL ?? `http://${host}:${port}`;
+const configuredPort = process.env.SMOKE_PORT ? Number(process.env.SMOKE_PORT) : null;
+let baseUrl = process.env.SMOKE_BASE_URL ?? null;
 
 const pageChecks = [
   { path: "/", expect: "Quantum communication tools from photon link to network scenario." },
@@ -135,16 +135,17 @@ async function runChecks() {
 
 async function main() {
   ensureBuiltArtifacts();
-  const useExternalServer = Boolean(process.env.SMOKE_BASE_URL);
+  const useExternalServer = Boolean(baseUrl);
   let serverOutput = "";
   let shutdown = async () => {};
 
   if (!useExternalServer) {
+    const requestedPort = configuredPort ?? 0;
     const app = next({
       dev: false,
       dir: projectRoot,
       hostname: host,
-      port
+      port: requestedPort
     });
     const handle = app.getRequestHandler();
 
@@ -154,8 +155,12 @@ async function main() {
 
     await new Promise((resolve, reject) => {
       server.once("error", reject);
-      server.listen(port, host, resolve);
+      server.listen(requestedPort, host, resolve);
     });
+
+    const address = server.address();
+    assert.ok(address && typeof address === "object", "Expected smoke server to expose a bound address.");
+    baseUrl = `http://${host}:${address.port}`;
 
     shutdown = async () => {
       await new Promise((resolve, reject) => {
