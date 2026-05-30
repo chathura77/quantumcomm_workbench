@@ -162,6 +162,8 @@ Current progress notes:
 - The viewer is generated from a local parser in `lib/standards/openapi.ts`, keeping the route inventory and schema summary tied to the same source contract used by the standards documentation.
 - The ETSI mock sandbox now ships with downloadable static example payload bundles for ready-status, request-success, insufficient-material, and descriptor-retrieval drills.
 - The standards conformance checker now includes built-in passing and failing example cases so schema and lifecycle expectations can be exercised without hand-authoring JSON first.
+- The ETSI mock now enforces demo-only application authorization headers, tracks active versus expired issued keys, cleans expired descriptors from the live pool, and reports TTL lifecycle metadata in `/api/qkd-mock/status`.
+- The sandbox can now request and retrieve demo keys with header-token auth, while the contract, examples, and conformance suite cover unauthorized and expired-key response shapes alongside the existing success and insufficient-material paths.
 
 ## Phase 12 - Teaching labs
 

@@ -236,6 +236,7 @@ export const keyRequestSchema = z.object({
 
 export const keyDescriptorSchema = z.object({
   keyId: z.string(),
+  applicationId: z.string(),
   keyLengthBits: z.number().int(),
   createdAt: z.string(),
   expiresAt: z.string(),
@@ -249,6 +250,12 @@ export const keyPoolStatusSchema = z.object({
   capacityBits: z.number().int(),
   refillRateBitsPerSecond: z.number(),
   oldestKeyAgeSeconds: z.number(),
+  activeKeyCount: z.number().int().min(0),
+  expiredKeyCount: z.number().int().min(0),
+  lastRefillAt: z.string(),
+  lastCleanupAt: z.string(),
+  authorizationMode: z.literal("header_token_demo"),
+  authorizedApplications: z.array(z.string()).min(1),
   status: z.enum(["ready", "low", "exhausted"]),
   demoOnly: z.literal(true)
 });
@@ -263,6 +270,22 @@ export const insufficientKeyMaterialSchema = z.object({
   error: z.literal("InsufficientKeyMaterial"),
   availableBits: z.number().int(),
   requestedBits: z.number().int()
+});
+
+export const unauthorizedApplicationSchema = z.object({
+  error: z.literal("UnauthorizedApplication"),
+  message: z.string(),
+  applicationId: z.string(),
+  authorizedApplications: z.array(z.string()).min(1),
+  demoOnly: z.literal(true)
+});
+
+export const expiredKeyErrorSchema = z.object({
+  error: z.literal("ExpiredKey"),
+  message: z.string(),
+  keyId: z.string(),
+  expiredAt: z.string(),
+  demoOnly: z.literal(true)
 });
 
 export const reportExportInputSchema = z.object({

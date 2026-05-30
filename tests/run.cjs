@@ -96,6 +96,7 @@ const { estimateMdiQkd } = require("../lib/qkd/mdiQkd.ts");
 const { estimatePostProcessing } = require("../lib/qkd/postProcessing.ts");
 const { analyzeQber } = require("../lib/qkd/qber.ts");
 const { checkMockQkdConformance } = require("../lib/standards/conformance.ts");
+const { __advanceMockPoolClockForTests, __resetMockPoolForTests } = require("../lib/standards/etsiMock.ts");
 const { conformanceExampleCases, mockApiExamples, serializeMockApiExampleBundle } = require("../lib/standards/mockExamples.ts");
 const { loadOpenApiContract } = require("../lib/standards/openapi.ts");
 
@@ -148,10 +149,10 @@ function collectDocumentedRoutes() {
   return new Set(Array.from(routeDoc.matchAll(/`(\/[^`]*)`/g), (match) => match[1]));
 }
 
-function createJsonRequest(body) {
+function createJsonRequest(body, headers = {}) {
   return new Request("http://localhost/test", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...headers },
     body: JSON.stringify(body)
   });
 }
@@ -579,6 +580,8 @@ test("standards example cases match expected conformance outcomes", () => {
   assert.equal(Array.isArray(bundle.examples), true);
   assert.equal(bundle.examples.length, mockApiExamples.length);
   assert.ok(bundle.examples.some((example) => example.endpoint === "/api/qkd-mock/keys/request" && example.status === 409));
+  assert.ok(bundle.examples.some((example) => example.endpoint === "/api/qkd-mock/keys/request" && example.status === 403));
+  assert.ok(bundle.examples.some((example) => example.endpoint.includes("/api/qkd-mock/keys/") && example.status === 410));
 });
 
 test("sample scenarios validate", () => {
@@ -988,29 +991,39 @@ test("key API routes return JSON for representative requests", async () => {
   const networkRoute = projectRequire("app/api/simulations/network/route/route.ts");
   const repeaterRoute = projectRequire("app/api/simulations/network/repeater-optimize/route.ts");
   const reportRoute = projectRequire("app/api/export/report/route.ts");
+  __resetMockPoolForTests();
 
   const statusResponse = await statusRoute.GET();
   assert.equal(statusResponse.status, 200);
   const statusBody = await readJson(statusResponse);
   assert.ok(statusBody.poolId);
   assert.equal(statusBody.demoOnly, true);
+  assert.equal(statusBody.authorizationMode, "header_token_demo");
+  assert.ok(Array.isArray(statusBody.authorizedApplications));
 
   const keyRequestResponse = await keyRequestRoute.POST(createJsonRequest({
     applicationId: "smoke-suite",
     keyLengthBits: 128,
     numberOfKeys: 1,
     priority: 1
-  }));
+  }, { "x-qkd-app-token": "smoke-suite-token" }));
   assert.equal(keyRequestResponse.status, 200);
   const keyRequestBody = await readJson(keyRequestResponse);
   assert.equal(keyRequestBody.keys.length, 1);
+  assert.equal(keyRequestBody.keys[0].applicationId, "smoke-suite");
 
-  const keyRetrieveResponse = await keyRetrieveRoute.GET(new Request("http://localhost/test"), {
+  const keyRetrieveResponse = await keyRetrieveRoute.GET(new Request("http://localhost/test", {
+    headers: {
+      "x-qkd-application-id": "smoke-suite",
+      "x-qkd-app-token": "smoke-suite-token"
+    }
+  }), {
     params: Promise.resolve({ keyId: keyRequestBody.keys[0].keyId })
   });
   assert.equal(keyRetrieveResponse.status, 200);
   const keyRetrieveBody = await readJson(keyRetrieveResponse);
   assert.equal(keyRetrieveBody.keyId, keyRequestBody.keys[0].keyId);
+  assert.equal(keyRetrieveBody.applicationId, "smoke-suite");
 
   const linkBudgetResponse = await linkBudgetRoute.POST(createJsonRequest(baseLink));
   assert.equal(linkBudgetResponse.status, 200);
@@ -1205,6 +1218,42 @@ test("key API routes return JSON for representative requests", async () => {
   assert.ok(typeof reportBody.content === "string" && reportBody.content.includes("Smoke suite link budget"));
 });
 
+test("mock key lifecycle cleans up expired descriptors", async () => {
+  const statusRoute = projectRequire("app/api/qkd-mock/status/route.ts");
+  const keyRequestRoute = projectRequire("app/api/qkd-mock/keys/request/route.ts");
+  const keyRetrieveRoute = projectRequire("app/api/qkd-mock/keys/[keyId]/route.ts");
+
+  __resetMockPoolForTests();
+  const keyRequestResponse = await keyRequestRoute.POST(createJsonRequest({
+    applicationId: "demo-app",
+    keyLengthBits: 128,
+    numberOfKeys: 1,
+    priority: 1
+  }, { "x-qkd-app-token": "demo-token-alice" }));
+  const keyRequestBody = await readJson(keyRequestResponse);
+  const keyId = keyRequestBody.keys[0].keyId;
+
+  __advanceMockPoolClockForTests(60 * 60 * 1000 + 1000);
+
+  const expiredResponse = await keyRetrieveRoute.GET(new Request("http://localhost/test", {
+    headers: {
+      "x-qkd-application-id": "demo-app",
+      "x-qkd-app-token": "demo-token-alice"
+    }
+  }), {
+    params: Promise.resolve({ keyId })
+  });
+  assert.equal(expiredResponse.status, 410);
+  const expiredBody = await readJson(expiredResponse);
+  assert.equal(expiredBody.error, "ExpiredKey");
+  assert.equal(expiredBody.keyId, keyId);
+
+  const statusResponse = await statusRoute.GET();
+  const statusBody = await readJson(statusResponse);
+  assert.equal(statusBody.activeKeyCount, 0);
+  assert.equal(statusBody.expiredKeyCount, 1);
+});
+
 test("API routes return expected validation and not-found errors", async () => {
   const keyRequestRoute = projectRequire("app/api/qkd-mock/keys/request/route.ts");
   const keyRetrieveRoute = projectRequire("app/api/qkd-mock/keys/[keyId]/route.ts");
@@ -1221,6 +1270,7 @@ test("API routes return expected validation and not-found errors", async () => {
   const networkRoute = projectRequire("app/api/simulations/network/route/route.ts");
   const repeaterRoute = projectRequire("app/api/simulations/network/repeater-optimize/route.ts");
   const reportRoute = projectRequire("app/api/export/report/route.ts");
+  __resetMockPoolForTests();
 
   const missingKeyResponse = await keyRetrieveRoute.GET(new Request("http://localhost/test"), {
     params: Promise.resolve({ keyId: "missing-key" })
@@ -1234,11 +1284,42 @@ test("API routes return expected validation and not-found errors", async () => {
     keyLengthBits: 1048576,
     numberOfKeys: 100,
     priority: 1
-  }));
+  }, { "x-qkd-app-token": "smoke-suite-token" }));
   assert.equal(insufficientResponse.status, 409);
   const insufficientBody = await readJson(insufficientResponse);
   assert.equal(insufficientBody.error, "InsufficientKeyMaterial");
   assert.ok(insufficientBody.requestedBits > insufficientBody.availableBits);
+
+  const unauthorizedRequestResponse = await keyRequestRoute.POST(createJsonRequest({
+    applicationId: "demo-app",
+    keyLengthBits: 128,
+    numberOfKeys: 1,
+    priority: 1
+  }, { "x-qkd-app-token": "wrong-token" }));
+  assert.equal(unauthorizedRequestResponse.status, 403);
+  const unauthorizedRequestBody = await readJson(unauthorizedRequestResponse);
+  assert.equal(unauthorizedRequestBody.error, "UnauthorizedApplication");
+
+  const validRequestResponse = await keyRequestRoute.POST(createJsonRequest({
+    applicationId: "demo-app",
+    keyLengthBits: 128,
+    numberOfKeys: 1,
+    priority: 1
+  }, { "x-qkd-app-token": "demo-token-alice" }));
+  const validRequestBody = await readJson(validRequestResponse);
+  const issuedKeyId = validRequestBody.keys[0].keyId;
+
+  const unauthorizedRetrieveResponse = await keyRetrieveRoute.GET(new Request("http://localhost/test", {
+    headers: {
+      "x-qkd-application-id": "lab-app",
+      "x-qkd-app-token": "lab-token-bob"
+    }
+  }), {
+    params: Promise.resolve({ keyId: issuedKeyId })
+  });
+  assert.equal(unauthorizedRetrieveResponse.status, 403);
+  const unauthorizedRetrieveBody = await readJson(unauthorizedRetrieveResponse);
+  assert.equal(unauthorizedRetrieveBody.error, "UnauthorizedApplication");
 
   const badLinkBudget = await linkBudgetRoute.POST(createJsonRequest({ ...baseLink, lengthKm: -1 }));
   assert.equal(badLinkBudget.status, 400);

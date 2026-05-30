@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { requestMockKeys } from "@/lib/standards/etsiMock";
+import { parseMockAuthorizationHeaders, requestMockKeys } from "@/lib/standards/etsiMock";
 import { validationErrorResponse } from "@/lib/validation/schemas";
 import { ZodError } from "zod";
 
 export async function POST(request: Request) {
-  const result = requestMockKeys(await request.json());
+  const result = requestMockKeys(await request.json(), parseMockAuthorizationHeaders(request.headers));
   if (!result.ok && result.status === 400 && result.body instanceof ZodError) {
     return NextResponse.json(validationErrorResponse(result.body), { status: 400 });
   }

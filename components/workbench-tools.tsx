@@ -1096,9 +1096,11 @@ export function QkdEngineeringLabTool() {
 export function EtsiApiSandboxTool() {
   const [status, setStatus] = useState<Record<string, unknown> | null>(null);
   const [applicationId, setApplicationId] = useState("demo-app");
+  const [applicationToken, setApplicationToken] = useState("demo-token-alice");
   const [keyLengthBits, setKeyLengthBits] = useState(256);
   const [numberOfKeys, setNumberOfKeys] = useState(2);
   const [priority, setPriority] = useState(1);
+  const [retrieveKeyId, setRetrieveKeyId] = useState("");
   const [response, setResponse] = useState<Record<string, unknown> | null>(null);
   const [selectedExampleId, setSelectedExampleId] = useState(mockApiExamples[0]?.id ?? "");
   const selectedExample = mockApiExamples.find((example) => example.id === selectedExampleId) ?? mockApiExamples[0];
@@ -1112,11 +1114,37 @@ export function EtsiApiSandboxTool() {
   const requestKeys = async () => {
     const res = await fetch("/api/qkd-mock/keys/request", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-qkd-app-token": applicationToken
+      },
       body: JSON.stringify({ applicationId, keyLengthBits, numberOfKeys, priority })
     });
     const body = await res.json();
     setResponse(body);
+    const firstKeyId = Array.isArray(body.keys) && typeof body.keys[0]?.keyId === "string" ? body.keys[0].keyId : "";
+    if (firstKeyId) {
+      setRetrieveKeyId(firstKeyId);
+    }
+    await refreshStatus();
+  };
+
+  const retrieveKey = async () => {
+    if (!retrieveKeyId.trim()) {
+      setResponse({
+        error: "MissingKeyId",
+        message: "Enter a key ID from a successful request to exercise retrieval, authorization, and expiry cleanup."
+      });
+      return;
+    }
+
+    const res = await fetch(`/api/qkd-mock/keys/${encodeURIComponent(retrieveKeyId.trim())}`, {
+      headers: {
+        "x-qkd-application-id": applicationId,
+        "x-qkd-app-token": applicationToken
+      }
+    });
+    setResponse(await res.json());
     await refreshStatus();
   };
 
@@ -1131,10 +1159,26 @@ export function EtsiApiSandboxTool() {
       description="Exercise demo-only key-pool status, key request, retrieval shape, and exhaustion behavior inspired by key-delivery API workflows."
       inputs={fieldList(<>
         <TextField label="Application ID" value={applicationId} onChange={setApplicationId} />
+        <TextField
+          label="Demo application token"
+          value={applicationToken}
+          onChange={setApplicationToken}
+          help="Demo-only header value for mock authorization. Try demo-app/demo-token-alice, lab-app/lab-token-bob, or smoke-suite/smoke-suite-token."
+        />
         <NumberField label="Key length" unit="bits" value={keyLengthBits} min={1} onChange={(value) => setKeyLengthBits(Math.floor(value))} />
         <NumberField label="Number of keys" value={numberOfKeys} min={1} onChange={(value) => setNumberOfKeys(Math.floor(value))} />
         <NumberField label="Priority" value={priority} min={0} max={10} onChange={(value) => setPriority(Math.floor(value))} />
-        <div className="flex flex-wrap gap-2"><Button onClick={requestKeys}>Request keys</Button><SecondaryButton onClick={refreshStatus}>Refresh status</SecondaryButton></div>
+        <TextField
+          label="Retrieve key ID"
+          value={retrieveKeyId}
+          onChange={setRetrieveKeyId}
+          help="Retrieval uses x-qkd-application-id and x-qkd-app-token headers so expiry and authorization paths stay visible."
+        />
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={requestKeys}>Request keys</Button>
+          <SecondaryButton onClick={retrieveKey}>Retrieve key</SecondaryButton>
+          <SecondaryButton onClick={refreshStatus}>Refresh status</SecondaryButton>
+        </div>
         <SelectField label="Mock example payload" value={selectedExampleId} onChange={setSelectedExampleId} options={mockApiExamples.map((example) => ({ value: example.id, label: example.title }))} />
         <div className="flex flex-wrap gap-2">
           <SecondaryButton onClick={loadExample}>Load example response</SecondaryButton>
@@ -1142,11 +1186,23 @@ export function EtsiApiSandboxTool() {
         </div>
       </>)}
       results={<>
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-5">
           <MetricCard label="Available pool" value={fmt(Number(status?.availableBits ?? 0))} unit="bits" />
           <MetricCard label="Capacity" value={fmt(Number(status?.capacityBits ?? 0))} unit="bits" />
           <MetricCard label="Status" value={String(status?.status ?? "loading")} />
+          <MetricCard label="Active keys" value={fmt(Number(status?.activeKeyCount ?? 0))} />
+          <MetricCard label="Expired keys" value={fmt(Number(status?.expiredKeyCount ?? 0))} />
         </div>
+        <ResultPanel>
+          <h2 className="text-sm font-semibold text-ink">Lifecycle and authorization</h2>
+          <ul className="mt-3 grid gap-2 text-sm text-slate-700">
+            <li>Oldest active key age: {fmt(Number(status?.oldestKeyAgeSeconds ?? 0))} s</li>
+            <li>Authorization mode: {String(status?.authorizationMode ?? "loading")}</li>
+            <li>Authorized applications: {Array.isArray(status?.authorizedApplications) ? status?.authorizedApplications.join(", ") : "loading"}</li>
+            <li>Last refill: {String(status?.lastRefillAt ?? "loading")}</li>
+            <li>Last cleanup: {String(status?.lastCleanupAt ?? "loading")}</li>
+          </ul>
+        </ResultPanel>
         <ResultPanel>
           <h2 className="text-lg font-semibold text-ink">Latest response</h2>
           <pre className="mt-3 max-h-96 overflow-auto rounded-md bg-slate-950 p-4 text-xs text-slate-100">{JSON.stringify(response ?? status, null, 2)}</pre>
@@ -1157,7 +1213,7 @@ export function EtsiApiSandboxTool() {
           <pre className="mt-3 overflow-auto rounded-md bg-slate-100 p-3 text-xs text-slate-800">{selectedExample.method} {selectedExample.endpoint}{"\n"}status {selectedExample.status}{selectedExample.requestBody ? `\nrequest ${JSON.stringify(selectedExample.requestBody, null, 2)}` : ""}</pre>
         </ResultPanel>
       </>}
-      formulas={<AssumptionList items={["The mock store is in memory and resets with the development server.", "Key material is a demo-only string, never production cryptographic material.", "Requests fail with InsufficientKeyMaterial when requested bits exceed the pool.", "Downloaded examples are static teaching payloads for conformance drills, not a claim of certified ETSI interoperability."]} />}
+      formulas={<AssumptionList items={["The mock store is in memory and resets with the development server.", "Key material is a demo-only string, never production cryptographic material.", "Per-key TTL expiry removes keys from the active pool and returns ExpiredKey on later retrieval attempts.", "Authorization is a teaching-only header check using fixed demo application IDs and tokens, not a production secret-management pattern.", "Downloaded examples are static teaching payloads for conformance drills, not a claim of certified ETSI interoperability."]} />}
     />
   );
 }
@@ -1576,7 +1632,21 @@ export function StandardsConformanceTool() {
   const [kind, setKind] = useState<ConformanceKind>("status");
   const availableExamples = useMemo(() => listConformanceExamples(kind), [kind]);
   const [selectedExampleId, setSelectedExampleId] = useState(availableExamples[0]?.id ?? "");
-  const [payload, setPayload] = useState(JSON.stringify(availableExamples[0]?.payload ?? { poolId: "demo", availableBits: 1024, capacityBits: 2048, refillRateBitsPerSecond: 128, oldestKeyAgeSeconds: 1, status: "ready", demoOnly: true }, null, 2));
+  const [payload, setPayload] = useState(JSON.stringify(availableExamples[0]?.payload ?? {
+    poolId: "demo",
+    availableBits: 1024,
+    capacityBits: 2048,
+    refillRateBitsPerSecond: 128,
+    oldestKeyAgeSeconds: 1,
+    activeKeyCount: 1,
+    expiredKeyCount: 0,
+    lastRefillAt: "2026-05-30T00:00:00.000Z",
+    lastCleanupAt: "2026-05-30T00:00:00.000Z",
+    authorizationMode: "header_token_demo",
+    authorizedApplications: ["demo-app"],
+    status: "ready",
+    demoOnly: true
+  }, null, 2));
   const selectedExample = availableExamples.find((example) => example.id === selectedExampleId) ?? availableExamples[0];
   const parsed = useMemo(() => parseJsonText(payload), [payload]);
   const parseError = parsed.ok ? undefined : parsed.error;
@@ -1598,7 +1668,7 @@ export function StandardsConformanceTool() {
       title="Standards conformance checker"
       description="Check MVP mock QKD API response shapes and lifecycle flags against the local schema expectations."
       inputs={fieldList(<>
-        <SelectField label="Payload kind" value={kind} onChange={setKind} options={[{ value: "status", label: "Pool status" }, { value: "key-request-success", label: "Key request success" }, { value: "key-request-error", label: "Insufficient material error" }, { value: "key-descriptor", label: "Key descriptor" }]} />
+        <SelectField label="Payload kind" value={kind} onChange={setKind} options={[{ value: "status", label: "Pool status" }, { value: "key-request-success", label: "Key request success" }, { value: "key-request-error", label: "Insufficient material error" }, { value: "authorization-error", label: "Authorization error" }, { value: "expired-key-error", label: "Expired key error" }, { value: "key-descriptor", label: "Key descriptor" }]} />
         <SelectField label="Built-in example" value={selectedExampleId} onChange={setSelectedExampleId} options={availableExamples.map((example) => ({ value: example.id, label: example.title }))} />
         <TextAreaField
           label="Response JSON"
@@ -1629,7 +1699,7 @@ export function StandardsConformanceTool() {
           retryLabel="Provide a valid JSON object to run the schema and lifecycle checks"
         />
       )}
-      formulas={<AssumptionList items={["The checker validates the MVP mock response schemas, not the full ETSI specification.", "Lifecycle checks are educational guardrails for demo-only key material and exhaustion behavior."]} />}
+      formulas={<AssumptionList items={["The checker validates the MVP mock response schemas, not the full ETSI specification.", "Lifecycle checks are educational guardrails for demo-only key material, TTL cleanup, and mock authorization behavior."]} />}
     />
   );
 }

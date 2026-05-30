@@ -22,6 +22,7 @@ export type ConformanceExampleCase = {
 
 const mockKeyDescriptor = {
   keyId: "demo-app-0001",
+  applicationId: "demo-app",
   keyLengthBits: 256,
   createdAt: "2026-05-30T00:00:00.000Z",
   expiresAt: "2026-05-30T01:00:00.000Z",
@@ -43,6 +44,12 @@ export const mockApiExamples: MockApiExample[] = [
       capacityBits: 262144,
       refillRateBitsPerSecond: 512,
       oldestKeyAgeSeconds: 14,
+      activeKeyCount: 2,
+      expiredKeyCount: 1,
+      lastRefillAt: "2026-05-30T00:00:20.000Z",
+      lastCleanupAt: "2026-05-30T00:00:15.000Z",
+      authorizationMode: "header_token_demo",
+      authorizedApplications: ["demo-app", "lab-app", "smoke-suite"],
       status: "ready",
       demoOnly: true
     }
@@ -93,6 +100,27 @@ export const mockApiExamples: MockApiExample[] = [
     }
   },
   {
+    id: "keys-request-unauthorized",
+    title: "Unauthorized application error",
+    method: "POST",
+    endpoint: "/api/qkd-mock/keys/request",
+    status: 403,
+    description: "A demo-only authorization refusal for a missing or mismatched application token.",
+    requestBody: {
+      applicationId: "demo-app",
+      keyLengthBits: 256,
+      numberOfKeys: 1,
+      priority: 1
+    },
+    responseBody: {
+      error: "UnauthorizedApplication",
+      applicationId: "demo-app",
+      message: "Provide a recognized demo application ID and matching x-qkd-app-token header. This mock never uses production credentials or real secret keys.",
+      authorizedApplications: ["demo-app", "lab-app", "smoke-suite"],
+      demoOnly: true
+    }
+  },
+  {
     id: "key-retrieve-success",
     title: "Retrieve one descriptor",
     method: "GET",
@@ -100,6 +128,21 @@ export const mockApiExamples: MockApiExample[] = [
     status: 200,
     description: "A descriptor lookup that returns the same demo-only marker instead of operational key escrow behavior.",
     responseBody: mockKeyDescriptor
+  },
+  {
+    id: "key-retrieve-expired",
+    title: "Expired key retrieval",
+    method: "GET",
+    endpoint: "/api/qkd-mock/keys/demo-app-0001",
+    status: 410,
+    description: "An expired key is removed from the active pool and cannot be reused after its TTL window closes.",
+    responseBody: {
+      error: "ExpiredKey",
+      message: "This demo key expired and was cleaned from the active pool. Request fresh material instead of reusing stale mock keys.",
+      keyId: "demo-app-0001",
+      expiredAt: "2026-05-30T01:00:00.000Z",
+      demoOnly: true
+    }
   }
 ];
 
@@ -116,6 +159,12 @@ export const conformanceExampleCases: ConformanceExampleCase[] = [
       capacityBits: 16384,
       refillRateBitsPerSecond: 512,
       oldestKeyAgeSeconds: 42,
+      activeKeyCount: 2,
+      expiredKeyCount: 1,
+      lastRefillAt: "2026-05-30T00:00:20.000Z",
+      lastCleanupAt: "2026-05-30T00:00:15.000Z",
+      authorizationMode: "header_token_demo",
+      authorizedApplications: ["demo-app", "lab-app", "smoke-suite"],
       status: "ready",
       demoOnly: true
     }
@@ -132,6 +181,12 @@ export const conformanceExampleCases: ConformanceExampleCase[] = [
       capacityBits: 16384,
       refillRateBitsPerSecond: 512,
       oldestKeyAgeSeconds: 42,
+      activeKeyCount: 2,
+      expiredKeyCount: 1,
+      lastRefillAt: "2026-05-30T00:00:20.000Z",
+      lastCleanupAt: "2026-05-30T00:00:15.000Z",
+      authorizationMode: "header_token_demo",
+      authorizedApplications: ["demo-app", "lab-app", "smoke-suite"],
       status: "ready"
     }
   },
@@ -157,6 +212,7 @@ export const conformanceExampleCases: ConformanceExampleCase[] = [
       keys: [
         {
           keyId: "demo-app-0003",
+          applicationId: "demo-app",
           keyLengthBits: 256,
           createdAt: "2026-05-30T00:00:00.000Z",
           keyMaterial: "DEMO-ONLY-demo-app-0003-256b",
@@ -180,6 +236,20 @@ export const conformanceExampleCases: ConformanceExampleCase[] = [
     }
   },
   {
+    id: "authorization-error-valid",
+    title: "Valid authorization error",
+    kind: "authorization-error",
+    expectedOk: true,
+    summary: "Confirms demo-only application authorization failures return the allowed application list and no secret material.",
+    payload: {
+      error: "UnauthorizedApplication",
+      applicationId: "demo-app",
+      message: "Provide a recognized demo application ID and matching x-qkd-app-token header. This mock never uses production credentials or real secret keys.",
+      authorizedApplications: ["demo-app", "lab-app", "smoke-suite"],
+      demoOnly: true
+    }
+  },
+  {
     id: "key-descriptor-valid",
     title: "Valid descriptor",
     kind: "key-descriptor",
@@ -195,9 +265,24 @@ export const conformanceExampleCases: ConformanceExampleCase[] = [
     summary: "Fails because TTL-style expiry metadata is required for lifecycle-oriented checks.",
     payload: {
       keyId: "demo-app-0004",
+      applicationId: "demo-app",
       keyLengthBits: 256,
       createdAt: "2026-05-30T00:00:00.000Z",
       keyMaterial: "DEMO-ONLY-demo-app-0004-256b",
+      demoOnly: true
+    }
+  },
+  {
+    id: "expired-key-valid",
+    title: "Valid expired-key error",
+    kind: "expired-key-error",
+    expectedOk: true,
+    summary: "Confirms expired key retrieval reports the cleaned-up key ID and its expiry timestamp.",
+    payload: {
+      error: "ExpiredKey",
+      message: "This demo key expired and was cleaned from the active pool. Request fresh material instead of reusing stale mock keys.",
+      keyId: "demo-app-0001",
+      expiredAt: "2026-05-30T01:00:00.000Z",
       demoOnly: true
     }
   }

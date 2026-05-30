@@ -145,6 +145,13 @@ paths:
   /qkd-mock/keys/request:
     post:
       summary: Request mock QKD key material
+      parameters:
+        - name: x-qkd-app-token
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Demo-only header token matched against the request applicationId.
       requestBody:
         required: true
         content:
@@ -164,6 +171,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InsufficientKeyMaterialError'
+        '403':
+          description: Demo-only authorization failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedApplicationError'
         '400':
           $ref: '#/components/responses/ValidationError'
   /qkd-mock/keys/{keyId}:
@@ -175,6 +188,16 @@ paths:
           required: true
           schema:
             type: string
+        - name: x-qkd-application-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: x-qkd-app-token
+          in: header
+          required: true
+          schema:
+            type: string
       responses:
         '200':
           description: Key descriptor
@@ -182,6 +205,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MockKeyDescriptor'
+        '403':
+          description: Demo-only authorization failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedApplicationError'
+        '410':
+          description: Key expired and cleaned from the active pool
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpiredKeyError'
         '404':
           description: Key not found
   /export/report:
@@ -612,7 +647,7 @@ components:
           type: string
     KeyPoolStatus:
       type: object
-      required: [poolId, availableBits, capacityBits, refillRateBitsPerSecond, status, demoOnly]
+      required: [poolId, availableBits, capacityBits, refillRateBitsPerSecond, oldestKeyAgeSeconds, activeKeyCount, expiredKeyCount, lastRefillAt, lastCleanupAt, authorizationMode, authorizedApplications, status, demoOnly]
       properties:
         poolId:
           type: string
@@ -624,6 +659,23 @@ components:
           type: number
         oldestKeyAgeSeconds:
           type: number
+        activeKeyCount:
+          type: integer
+          minimum: 0
+        expiredKeyCount:
+          type: integer
+          minimum: 0
+        lastRefillAt:
+          type: string
+        lastCleanupAt:
+          type: string
+        authorizationMode:
+          type: string
+          enum: [header_token_demo]
+        authorizedApplications:
+          type: array
+          items:
+            type: string
         status:
           type: string
           enum: [ready, low, exhausted]
@@ -649,9 +701,11 @@ components:
           maximum: 10
     MockKeyDescriptor:
       type: object
-      required: [keyId, keyLengthBits, createdAt, expiresAt, keyMaterial, demoOnly]
+      required: [keyId, applicationId, keyLengthBits, createdAt, expiresAt, keyMaterial, demoOnly]
       properties:
         keyId:
+          type: string
+        applicationId:
           type: string
         keyLengthBits:
           type: integer
@@ -685,6 +739,36 @@ components:
           type: integer
         requestedBits:
           type: integer
+    UnauthorizedApplicationError:
+      type: object
+      required: [error, message, applicationId, authorizedApplications, demoOnly]
+      properties:
+        error:
+          const: UnauthorizedApplication
+        message:
+          type: string
+        applicationId:
+          type: string
+        authorizedApplications:
+          type: array
+          items:
+            type: string
+        demoOnly:
+          type: boolean
+    ExpiredKeyError:
+      type: object
+      required: [error, message, keyId, expiredAt, demoOnly]
+      properties:
+        error:
+          const: ExpiredKey
+        message:
+          type: string
+        keyId:
+          type: string
+        expiredAt:
+          type: string
+        demoOnly:
+          type: boolean
     ReportExportInput:
       type: object
       required: [toolId, title, input, result, assumptions, warnings, format]

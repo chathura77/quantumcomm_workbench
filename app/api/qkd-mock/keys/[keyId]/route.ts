@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { retrieveMockKey } from "@/lib/standards/etsiMock";
+import { parseMockAuthorizationHeaders, retrieveMockKey } from "@/lib/standards/etsiMock";
 
-export async function GET(_: Request, { params }: { params: Promise<{ keyId: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ keyId: string }> }) {
   const { keyId } = await params;
-  const result = retrieveMockKey(keyId);
-  return NextResponse.json(result.body, { status: result.ok ? 200 : 404 });
+  const result = retrieveMockKey(keyId, parseMockAuthorizationHeaders(request.headers));
+  return NextResponse.json(result.body, { status: result.status });
 }
