@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { MetricCard, NumberField } from "@/components/ui";
 
 function seededBit(index: number, salt: number) {
@@ -9,6 +9,7 @@ function seededBit(index: number, salt: number) {
 
 export function BB84MiniDemo() {
   const [eveFraction, setEveFraction] = useState(0.1);
+  const summaryId = useId();
   const demo = useMemo(() => {
     const rows = Array.from({ length: 16 }, (_, index) => {
       const aliceBit = seededBit(index, 3);
@@ -35,8 +36,15 @@ export function BB84MiniDemo() {
           <MetricCard label="Demo QBER" value={`${(demo.qber * 100).toFixed(1)}%`} />
         </div>
       </div>
+      <p id={summaryId} className="mt-4 text-sm leading-6 text-slate-600">
+        This deterministic teaching trace shows 16 transmissions, {demo.siftedLength} sifted bits, and a demo QBER of {(demo.qber * 100).toFixed(1)}%.
+        It illustrates intercept-resend disturbance only and is not a finite-key or device-imperfection security proof.
+      </p>
       <div className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[620px] text-left text-sm">
+        <table className="w-full min-w-[620px] text-left text-sm" aria-describedby={summaryId}>
+          <caption className="pb-2 text-left text-xs leading-5 text-slate-500">
+            Row-by-row BB84 sifting view showing Alice and Bob bases, kept bits, and whether the deterministic teaching trace produced an error.
+          </caption>
           <thead className="text-slate-500"><tr><th className="py-2">i</th><th>Alice bit</th><th>Alice basis</th><th>Bob basis</th><th>Bob bit</th><th>Kept</th><th>Error</th></tr></thead>
           <tbody className="divide-y divide-slate-100">
             {demo.rows.map((row) => <tr key={row.index}><td className="py-2">{row.index}</td><td>{row.aliceBit}</td><td>{row.aliceBasis}</td><td>{row.bobBasis}</td><td>{row.bobBit}</td><td>{row.kept ? "yes" : "no"}</td><td>{row.error ? "yes" : "no"}</td></tr>)}

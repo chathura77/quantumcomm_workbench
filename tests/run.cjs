@@ -880,6 +880,22 @@ test("phase 6 loading and error shells render status and recovery copy", () => {
   }
 });
 
+test("learning demos expose accessible table captions and summaries", () => {
+  const demos = projectRequire("components/learn-demos.tsx");
+  const labs = projectRequire("components/teaching-labs.tsx");
+
+  const bb84DemoHtml = renderToStaticMarkup(React.createElement(demos.BB84MiniDemo));
+  assert.ok(bb84DemoHtml.includes("<caption"));
+  assert.ok(bb84DemoHtml.includes("Row-by-row BB84 sifting view"));
+  assert.ok(bb84DemoHtml.includes("aria-describedby"));
+  assert.ok(bb84DemoHtml.includes("deterministic teaching trace"));
+
+  const bb84LabHtml = renderToStaticMarkup(React.createElement(labs.BB84TeachingLab));
+  assert.ok(bb84LabHtml.includes("<caption"));
+  assert.ok(bb84LabHtml.includes("BB84 worksheet trace"));
+  assert.ok(bb84LabHtml.includes("Use it to justify each worksheet answer from visible evidence"));
+});
+
 test("JSON-driven tools surface invalid-state recovery copy", () => {
   const tools = projectRequire("components/workbench-tools.tsx");
 

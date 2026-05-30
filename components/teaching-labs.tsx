@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import {
   buildBb84LabSummary,
   buildBb84TeachingLab,
@@ -73,6 +73,7 @@ function WorksheetFields({
 export function BB84TeachingLab() {
   const [eveFraction, setEveFraction] = useState(0.1);
   const [answers, setAnswers] = useState<TeachingLabAnswer[]>([]);
+  const summaryId = useId();
   const summary = useMemo(() => buildBb84LabSummary({ eveFraction }), [eveFraction]);
   const worksheet = useMemo(() => buildBb84TeachingLab({ eveFraction }), [eveFraction]);
 
@@ -93,8 +94,15 @@ export function BB84TeachingLab() {
             </div>
           ))}
         </div>
+        <p id={summaryId} className="mt-4 text-sm leading-6 text-slate-600">
+          The worksheet table below records the same 16-bit teaching trace used to compute {worksheet.metrics[0]?.value} sifted bits and a {(summary.qber * 100).toFixed(1)}% QBER proxy.
+          Use it to justify each worksheet answer from visible evidence rather than from generalized security claims.
+        </p>
         <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[760px] text-left text-sm">
+          <table className="w-full min-w-[760px] text-left text-sm" aria-describedby={summaryId}>
+            <caption className="pb-2 text-left text-xs leading-5 text-slate-500">
+              BB84 worksheet trace with row-level intercept flags, sifted-bit retention, and error outcomes for the current teaching preset.
+            </caption>
             <thead className="text-slate-500">
               <tr>
                 <th className="py-2">i</th>
