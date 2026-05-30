@@ -76,6 +76,7 @@ Current progress notes:
 - API smoke coverage includes representative success paths plus validation, insufficient-material, and not-found error cases for the current Phase 0-5 endpoints.
 - Shared UI controls now expose explicit helper-text associations, stronger keyboard focus rings, accessible chart summaries, and reusable loading/error/empty states across the major route groups.
 - JSON-heavy tools now use shared accessible textarea and checkbox controls, disable actions while inputs are invalid, and surface clearer recovery copy for report generation, conformance checking, scenario editing, and empty extractor/filter states.
+- The scenario-builder node/link edit tables now expose explicit row-scoped labels and remove-action names for every cell control, closing a remaining keyboard/screen-reader gap in the Phase 6 accessibility slice.
 - Added a committed desktop/tablet/mobile visual-QA checklist so responsive review has a stable route set and explicit acceptance points for navigation, charts, forms, and footer content.
 
 ## Phase 7 - Saved runs and scenario library

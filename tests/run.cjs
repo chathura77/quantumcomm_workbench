@@ -885,6 +885,12 @@ test("JSON-driven tools surface invalid-state recovery copy", () => {
   assert.ok(scenarioHtml.includes("Editable link records"));
   assert.ok(scenarioHtml.includes("Saved scenario library"));
   assert.ok(scenarioHtml.includes("Import scenario bundle"));
+  assert.ok(scenarioHtml.includes("aria-label=\"Node ID for Alice"));
+  assert.ok(scenarioHtml.includes("aria-label=\"Node type for Alice"));
+  assert.ok(scenarioHtml.includes("aria-label=\"Remove node Alice"));
+  assert.ok(scenarioHtml.includes("aria-label=\"Source node for alice-relay"));
+  assert.ok(scenarioHtml.includes("aria-label=\"Classical latency for alice-relay"));
+  assert.ok(scenarioHtml.includes("aria-label=\"Remove link alice-relay"));
 
   const linkBudgetHtml = renderToStaticMarkup(React.createElement(tools.LinkBudgetTool));
   assert.ok(linkBudgetHtml.includes("Shareable URL state"));

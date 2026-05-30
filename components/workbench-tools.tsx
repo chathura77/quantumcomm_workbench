@@ -125,6 +125,10 @@ function parseOptionalNumber(value: string): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
+function describeScenarioField(entityLabel: string, fieldLabel: string) {
+  return `${fieldLabel} for ${entityLabel}`;
+}
+
 function fieldList(children: React.ReactNode) {
   return <div className="grid gap-4">{children}</div>;
 }
@@ -1641,6 +1645,7 @@ export function ScenarioBuilderTool() {
   const scenario = validation.ok ? validation.scenario : sampleScenarios[0];
   const selectedScenario = records.find((record) => record.id === selectedScenarioId);
   const canEditTables = validation.ok;
+  const selectedSavedScenarioId = selectedScenarioId === "none" ? records[0]?.id ?? "none" : selectedScenarioId;
 
   useEffect(() => {
     if (selectedScenarioId !== "none" && !selectedScenario) {
@@ -1783,7 +1788,7 @@ export function ScenarioBuilderTool() {
                   <div className="grid gap-4 md:grid-cols-2">
                     <SelectField
                       label="Selected saved scenario"
-                      value={selectedScenarioId === "none" ? records[0].id : selectedScenarioId}
+                      value={selectedSavedScenarioId}
                       onChange={setSelectedScenarioId}
                       options={records.map((record) => ({ value: record.id, label: `${record.title} · ${record.scenario.id}` }))}
                       help="Load a prior scenario snapshot back into the editor without changing the saved library entry."
@@ -1801,6 +1806,7 @@ export function ScenarioBuilderTool() {
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[720px] text-left text-sm">
+                      <caption className="pb-2 text-left text-xs text-slate-500">Saved scenario snapshots with creation time, topology size, and warning counts for local reload or bundle export.</caption>
                       <thead className="text-slate-500">
                         <tr>
                           <th scope="col" className="py-2">Saved at</th>
@@ -1878,31 +1884,85 @@ export function ScenarioBuilderTool() {
                   <tbody className="divide-y divide-slate-100">
                     {scenario.nodes.map((node) => (
                       <tr key={node.id}>
-                        <td className="py-2">
-                          <input className="w-28 rounded-md border border-slate-300 px-2 py-1" value={node.id} disabled={!canEditTables} onChange={(event) => updateNode(node.id, { id: event.target.value })} />
+                        <th scope="row" className="py-2 font-medium text-ink">
+                          <input
+                            aria-label={describeScenarioField(node.label || node.id, "Node ID")}
+                            className="w-28 rounded-md border border-slate-300 px-2 py-1"
+                            value={node.id}
+                            disabled={!canEditTables}
+                            onChange={(event) => updateNode(node.id, { id: event.target.value })}
+                          />
+                        </th>
+                        <td>
+                          <input
+                            aria-label={describeScenarioField(node.label || node.id, "Node label")}
+                            className="w-40 rounded-md border border-slate-300 px-2 py-1"
+                            value={node.label}
+                            disabled={!canEditTables}
+                            onChange={(event) => updateNode(node.id, { label: event.target.value })}
+                          />
                         </td>
                         <td>
-                          <input className="w-40 rounded-md border border-slate-300 px-2 py-1" value={node.label} disabled={!canEditTables} onChange={(event) => updateNode(node.id, { label: event.target.value })} />
-                        </td>
-                        <td>
-                          <select className="w-36 rounded-md border border-slate-300 px-2 py-1" value={node.type} disabled={!canEditTables} onChange={(event) => updateNode(node.id, { type: event.target.value as QuantumNodeType })}>
+                          <select
+                            aria-label={describeScenarioField(node.label || node.id, "Node type")}
+                            className="w-36 rounded-md border border-slate-300 px-2 py-1"
+                            value={node.type}
+                            disabled={!canEditTables}
+                            onChange={(event) => updateNode(node.id, { type: event.target.value as QuantumNodeType })}
+                          >
                             {quantumNodeTypeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                           </select>
                         </td>
                         <td>
-                          <input className="w-28 rounded-md border border-slate-300 px-2 py-1" type="number" value={node.memoryLifetimeMs ?? ""} disabled={!canEditTables} onChange={(event) => updateNode(node.id, { memoryLifetimeMs: parseOptionalNumber(event.target.value) })} />
+                          <input
+                            aria-label={describeScenarioField(node.label || node.id, "Memory lifetime")}
+                            className="w-28 rounded-md border border-slate-300 px-2 py-1"
+                            type="number"
+                            value={node.memoryLifetimeMs ?? ""}
+                            disabled={!canEditTables}
+                            onChange={(event) => updateNode(node.id, { memoryLifetimeMs: parseOptionalNumber(event.target.value) })}
+                          />
                         </td>
                         <td>
-                          <input className="w-24 rounded-md border border-slate-300 px-2 py-1" type="number" value={node.memoryCount ?? ""} disabled={!canEditTables} onChange={(event) => updateNode(node.id, { memoryCount: parseOptionalNumber(event.target.value) })} />
+                          <input
+                            aria-label={describeScenarioField(node.label || node.id, "Memory count")}
+                            className="w-24 rounded-md border border-slate-300 px-2 py-1"
+                            type="number"
+                            value={node.memoryCount ?? ""}
+                            disabled={!canEditTables}
+                            onChange={(event) => updateNode(node.id, { memoryCount: parseOptionalNumber(event.target.value) })}
+                          />
                         </td>
                         <td>
-                          <input className="w-20 rounded-md border border-slate-300 px-2 py-1" type="number" value={node.x ?? ""} disabled={!canEditTables} onChange={(event) => updateNode(node.id, { x: parseOptionalNumber(event.target.value) })} />
+                          <input
+                            aria-label={describeScenarioField(node.label || node.id, "X coordinate")}
+                            className="w-20 rounded-md border border-slate-300 px-2 py-1"
+                            type="number"
+                            value={node.x ?? ""}
+                            disabled={!canEditTables}
+                            onChange={(event) => updateNode(node.id, { x: parseOptionalNumber(event.target.value) })}
+                          />
                         </td>
                         <td>
-                          <input className="w-20 rounded-md border border-slate-300 px-2 py-1" type="number" value={node.y ?? ""} disabled={!canEditTables} onChange={(event) => updateNode(node.id, { y: parseOptionalNumber(event.target.value) })} />
+                          <input
+                            aria-label={describeScenarioField(node.label || node.id, "Y coordinate")}
+                            className="w-20 rounded-md border border-slate-300 px-2 py-1"
+                            type="number"
+                            value={node.y ?? ""}
+                            disabled={!canEditTables}
+                            onChange={(event) => updateNode(node.id, { y: parseOptionalNumber(event.target.value) })}
+                          />
                         </td>
                         <td className="text-right">
-                          <button className="text-sm text-rose-700 disabled:text-slate-400" type="button" disabled={!canEditTables || scenario.nodes.length <= 1} onClick={() => removeNode(node.id)}>Remove</button>
+                          <button
+                            aria-label={`Remove node ${node.label || node.id}`}
+                            className="text-sm text-rose-700 disabled:text-slate-400"
+                            type="button"
+                            disabled={!canEditTables || scenario.nodes.length <= 1}
+                            onClick={() => removeNode(node.id)}
+                          >
+                            Remove
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -1932,39 +1992,107 @@ export function ScenarioBuilderTool() {
                   <tbody className="divide-y divide-slate-100">
                     {scenario.links.map((link) => (
                       <tr key={link.id}>
-                        <td className="py-2">
-                          <input className="w-28 rounded-md border border-slate-300 px-2 py-1" value={link.id} disabled={!canEditTables} onChange={(event) => updateLink(link.id, { id: event.target.value })} />
-                        </td>
+                        <th scope="row" className="py-2 font-medium text-ink">
+                          <input
+                            aria-label={describeScenarioField(link.id, "Link ID")}
+                            className="w-28 rounded-md border border-slate-300 px-2 py-1"
+                            value={link.id}
+                            disabled={!canEditTables}
+                            onChange={(event) => updateLink(link.id, { id: event.target.value })}
+                          />
+                        </th>
                         <td>
-                          <select className="w-28 rounded-md border border-slate-300 px-2 py-1" value={link.source} disabled={!canEditTables} onChange={(event) => updateLink(link.id, { source: event.target.value })}>
+                          <select
+                            aria-label={describeScenarioField(link.id, "Source node")}
+                            className="w-28 rounded-md border border-slate-300 px-2 py-1"
+                            value={link.source}
+                            disabled={!canEditTables}
+                            onChange={(event) => updateLink(link.id, { source: event.target.value })}
+                          >
                             {scenario.nodes.map((node) => <option key={node.id} value={node.id}>{node.id}</option>)}
                           </select>
                         </td>
                         <td>
-                          <select className="w-28 rounded-md border border-slate-300 px-2 py-1" value={link.target} disabled={!canEditTables} onChange={(event) => updateLink(link.id, { target: event.target.value })}>
+                          <select
+                            aria-label={describeScenarioField(link.id, "Target node")}
+                            className="w-28 rounded-md border border-slate-300 px-2 py-1"
+                            value={link.target}
+                            disabled={!canEditTables}
+                            onChange={(event) => updateLink(link.id, { target: event.target.value })}
+                          >
                             {scenario.nodes.map((node) => <option key={node.id} value={node.id}>{node.id}</option>)}
                           </select>
                         </td>
                         <td>
-                          <input className="w-24 rounded-md border border-slate-300 px-2 py-1" type="number" value={link.lengthKm} disabled={!canEditTables} onChange={(event) => updateLink(link.id, { lengthKm: Number(event.target.value) || 0 })} />
+                          <input
+                            aria-label={describeScenarioField(link.id, "Link length")}
+                            className="w-24 rounded-md border border-slate-300 px-2 py-1"
+                            type="number"
+                            value={link.lengthKm}
+                            disabled={!canEditTables}
+                            onChange={(event) => updateLink(link.id, { lengthKm: Number(event.target.value) || 0 })}
+                          />
                         </td>
                         <td>
-                          <input className="w-24 rounded-md border border-slate-300 px-2 py-1" type="number" value={link.attenuationDbPerKm ?? ""} disabled={!canEditTables} onChange={(event) => updateLink(link.id, { attenuationDbPerKm: parseOptionalNumber(event.target.value) })} />
+                          <input
+                            aria-label={describeScenarioField(link.id, "Attenuation per kilometre")}
+                            className="w-24 rounded-md border border-slate-300 px-2 py-1"
+                            type="number"
+                            value={link.attenuationDbPerKm ?? ""}
+                            disabled={!canEditTables}
+                            onChange={(event) => updateLink(link.id, { attenuationDbPerKm: parseOptionalNumber(event.target.value) })}
+                          />
                         </td>
                         <td>
-                          <input className="w-20 rounded-md border border-slate-300 px-2 py-1" type="number" value={link.lossDb ?? ""} disabled={!canEditTables} onChange={(event) => updateLink(link.id, { lossDb: parseOptionalNumber(event.target.value) })} />
+                          <input
+                            aria-label={describeScenarioField(link.id, "Extra link loss")}
+                            className="w-20 rounded-md border border-slate-300 px-2 py-1"
+                            type="number"
+                            value={link.lossDb ?? ""}
+                            disabled={!canEditTables}
+                            onChange={(event) => updateLink(link.id, { lossDb: parseOptionalNumber(event.target.value) })}
+                          />
                         </td>
                         <td>
-                          <input className="w-24 rounded-md border border-slate-300 px-2 py-1" type="number" value={link.successProbability ?? ""} disabled={!canEditTables} onChange={(event) => updateLink(link.id, { successProbability: parseOptionalNumber(event.target.value) })} />
+                          <input
+                            aria-label={describeScenarioField(link.id, "Success probability")}
+                            className="w-24 rounded-md border border-slate-300 px-2 py-1"
+                            type="number"
+                            value={link.successProbability ?? ""}
+                            disabled={!canEditTables}
+                            onChange={(event) => updateLink(link.id, { successProbability: parseOptionalNumber(event.target.value) })}
+                          />
                         </td>
                         <td>
-                          <input className="w-20 rounded-md border border-slate-300 px-2 py-1" type="number" value={link.fidelity ?? ""} disabled={!canEditTables} onChange={(event) => updateLink(link.id, { fidelity: parseOptionalNumber(event.target.value) })} />
+                          <input
+                            aria-label={describeScenarioField(link.id, "Fidelity")}
+                            className="w-20 rounded-md border border-slate-300 px-2 py-1"
+                            type="number"
+                            value={link.fidelity ?? ""}
+                            disabled={!canEditTables}
+                            onChange={(event) => updateLink(link.id, { fidelity: parseOptionalNumber(event.target.value) })}
+                          />
                         </td>
                         <td>
-                          <input className="w-20 rounded-md border border-slate-300 px-2 py-1" type="number" value={link.classicalLatencyMs ?? ""} disabled={!canEditTables} onChange={(event) => updateLink(link.id, { classicalLatencyMs: parseOptionalNumber(event.target.value) })} />
+                          <input
+                            aria-label={describeScenarioField(link.id, "Classical latency")}
+                            className="w-20 rounded-md border border-slate-300 px-2 py-1"
+                            type="number"
+                            value={link.classicalLatencyMs ?? ""}
+                            disabled={!canEditTables}
+                            onChange={(event) => updateLink(link.id, { classicalLatencyMs: parseOptionalNumber(event.target.value) })}
+                          />
                         </td>
                         <td className="text-right">
-                          <button className="text-sm text-rose-700 disabled:text-slate-400" type="button" disabled={!canEditTables || scenario.links.length <= 1} onClick={() => removeLink(link.id)}>Remove</button>
+                          <button
+                            aria-label={`Remove link ${link.id}`}
+                            className="text-sm text-rose-700 disabled:text-slate-400"
+                            type="button"
+                            disabled={!canEditTables || scenario.links.length <= 1}
+                            onClick={() => removeLink(link.id)}
+                          >
+                            Remove
+                          </button>
                         </td>
                       </tr>
                     ))}
