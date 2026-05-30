@@ -20,6 +20,7 @@ npm run lint
 npm run typecheck
 npm run test
 npm run build
+npm run test:e2e
 ```
 
 For responsive/manual UI review after layout or shared-component changes, use `docs/VISUAL_QA.md`.
@@ -29,7 +30,7 @@ For responsive/manual UI review after layout or shared-component changes, use `d
 - Learn pages for BB84, E91, BBM92, decoy-state BB84, MDI-QKD, TF-QKD, CV-QKD, teleportation, entanglement swapping, and quantum repeaters.
 - QKD engineering tools: link budget, finite-key BB84 teaching estimator, QBER forensics, post-processing, attack explorer, phase encoding, channel planner, paper extractor, and report generator.
 - Standards and integration tools: ETSI-style mock QKD API sandbox, KMS simulator, standards conformance checker, and hybrid PQC + QKD decision tool.
-- Network tools: scenario builder, entanglement routing, repeater optimizer, and benchmark hub with export placeholders for external simulators.
+- Network tools: scenario builder, entanglement routing, repeater optimizer, and benchmark hub with concrete simulator-mapping exports for external simulators.
 - API routes under `/api/simulations/*`, `/api/qkd-mock/*`, and `/api/export/report`.
 
 ## Key files

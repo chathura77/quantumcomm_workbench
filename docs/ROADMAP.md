@@ -191,6 +191,7 @@ Deliverables:
 Current progress notes:
 
 - Added a baseline GitHub Actions CI workflow that runs `npm ci`, lint, typecheck, tests, and production build on pushes and pull requests.
+- Added a built-server HTTP smoke suite that boots the production Next app, exercises representative routes and key API endpoints end-to-end, and runs in CI after `npm run build` without requiring extra browser dependencies.
 - Added a scheduled dependency-audit workflow so high-severity npm vulnerabilities surface without relying on ad hoc local checks.
 - Added deployment and release runbooks in `docs/DEPLOYMENT.md` and `docs/RELEASE_CHECKLIST.md`, keeping the demo-only posture and manual visual QA expectations explicit.
 

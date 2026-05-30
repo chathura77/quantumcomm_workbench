@@ -20,8 +20,9 @@ export function generateStaticParams() {
   return Object.keys(protocolDetails).map((protocol) => ({ protocol }));
 }
 
-export default function ProtocolPage({ params }: { params: { protocol: string } }) {
-  const key = (aliases[params.protocol] ?? params.protocol) as ProtocolKey;
+export default async function ProtocolPage({ params }: { params: Promise<{ protocol: string }> }) {
+  const { protocol: protocolParam } = await params;
+  const key = (aliases[protocolParam] ?? protocolParam) as ProtocolKey;
   const protocol = protocolDetails[key];
   if (!protocol) notFound();
 

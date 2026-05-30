@@ -128,6 +128,12 @@ function projectRequire(relativePath) {
   return require(path.join(projectRoot, relativePath));
 }
 
+async function renderPageMarkup(pageComponent, props) {
+  const rendered = pageComponent(props);
+  const node = typeof rendered?.then === "function" ? await rendered : rendered;
+  return renderToStaticMarkup(node);
+}
+
 function projectRelative(fullPath) {
   return path.relative(projectRoot, fullPath).replace(/\\/g, "/");
 }
@@ -696,7 +702,7 @@ test("saved scenario helpers preserve, duplicate, and bundle local library entri
   ]);
 });
 
-test("all page routes render non-empty markup", () => {
+test("all page routes render non-empty markup", async () => {
   const pageFiles = collectFiles(path.join(projectRoot, "app"), "page.tsx");
 
   for (const pageFile of pageFiles) {
@@ -713,7 +719,7 @@ test("all page routes render non-empty markup", () => {
     assert.ok(propVariants.length > 0, `${relativePath} did not provide any params to render`);
 
     for (const props of propVariants) {
-      const html = renderToStaticMarkup(React.createElement(moduleExports.default, props));
+      const html = await renderPageMarkup(moduleExports.default, props);
       assert.ok(html.includes("<main"), `${relativePath} did not render a main landmark`);
       assert.ok(html.length > 200, `${relativePath} rendered unexpectedly short output`);
       assert.ok(!html.includes("undefined"), `${relativePath} rendered undefined content`);
@@ -721,8 +727,8 @@ test("all page routes render non-empty markup", () => {
   }
 
   const protocolPage = projectRequire("app/learn/[protocol]/page.tsx");
-  const bb84Html = renderToStaticMarkup(React.createElement(protocolPage.default, { params: { protocol: "bb84" } }));
-  const e91Html = renderToStaticMarkup(React.createElement(protocolPage.default, { params: { protocol: "e91" } }));
+  const bb84Html = await renderPageMarkup(protocolPage.default, { params: Promise.resolve({ protocol: "bb84" }) });
+  const e91Html = await renderPageMarkup(protocolPage.default, { params: Promise.resolve({ protocol: "e91" }) });
   assert.ok(bb84Html.includes("Guided lab"));
   assert.ok(bb84Html.includes("Worksheet mode"));
   assert.ok(e91Html.includes("Bell-style interpretation"));
@@ -925,12 +931,16 @@ test("OpenAPI viewer reflects the checked-in contract", () => {
 });
 
 test("phase 13 CI and release artifacts are checked in", () => {
+  const packageJson = JSON.parse(fs.readFileSync(path.join(projectRoot, "package.json"), "utf8"));
+  assert.equal(packageJson.scripts["test:e2e"], "node tests/e2e-smoke.cjs");
+
   const ciWorkflow = fs.readFileSync(path.join(projectRoot, ".github", "workflows", "ci.yml"), "utf8");
   assert.ok(ciWorkflow.includes("npm ci"));
   assert.ok(ciWorkflow.includes("npm run lint"));
   assert.ok(ciWorkflow.includes("npm run typecheck"));
   assert.ok(ciWorkflow.includes("npm run test"));
   assert.ok(ciWorkflow.includes("npm run build"));
+  assert.ok(ciWorkflow.includes("npm run test:e2e"));
 
   const auditWorkflow = fs.readFileSync(path.join(projectRoot, ".github", "workflows", "dependency-audit.yml"), "utf8");
   assert.ok(auditWorkflow.includes("npm audit --audit-level=high"));
@@ -939,10 +949,12 @@ test("phase 13 CI and release artifacts are checked in", () => {
   const deploymentDoc = fs.readFileSync(path.join(projectRoot, "docs", "DEPLOYMENT.md"), "utf8");
   assert.ok(deploymentDoc.includes("Pre-deploy checks"));
   assert.ok(deploymentDoc.includes("npm run build"));
+  assert.ok(deploymentDoc.includes("npm run test:e2e"));
   assert.ok(deploymentDoc.includes("demo-only posture"));
 
   const releaseChecklist = fs.readFileSync(path.join(projectRoot, "docs", "RELEASE_CHECKLIST.md"), "utf8");
   assert.ok(releaseChecklist.includes("npm run lint"));
+  assert.ok(releaseChecklist.includes("npm run test:e2e"));
   assert.ok(releaseChecklist.includes("docs/VISUAL_QA.md"));
   assert.ok(releaseChecklist.includes("simulation-only"));
 });
