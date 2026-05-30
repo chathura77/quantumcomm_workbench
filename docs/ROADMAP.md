@@ -72,6 +72,7 @@ Deliverables:
 Current progress notes:
 
 - Route smoke coverage now asserts every current `app/page.tsx` page renders non-empty markup and every current `app/api/**/route.ts` endpoint is explicitly exercised in the test suite.
+- The built-server smoke suite now boots the production Next build and verifies every current page route plus every current API route, including representative auth, insufficient-material, and not-found API behavior so Phase 6 coverage cannot silently drift out of CI.
 - Route-inventory hardening now keeps `docs/ROUTES_AND_PAGES.md` synchronized with the actual `app/**/page.tsx` tree through an automated test, reducing documentation drift when new pages land.
 - API smoke coverage includes representative success paths plus validation, insufficient-material, and not-found error cases for the current Phase 0-5 endpoints.
 - Shared UI controls now expose explicit helper-text associations, stronger keyboard focus rings, accessible chart summaries, and reusable loading/error/empty states across the major route groups.
