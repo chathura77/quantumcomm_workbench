@@ -778,7 +778,7 @@ test("SEO and AI-readable surfaces expose canonical crawl metadata", async () =>
   const llmsRoute = projectRequire("app/llms.txt/route.ts");
   const llmsFullRoute = projectRequire("app/llms-full.txt/route.ts");
   const aiSummaryRoute = projectRequire("app/ai-summary.json/route.ts");
-  const expectedPublicSiteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? process.env.QUANTUMCOMM_SITE_URL ?? "https://www.sarathchandra.com/quantumworkbench").replace(/\/+$/, "");
+  const expectedPublicSiteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? process.env.QUANTUMCOMM_SITE_URL ?? "https://quantum-workbench.sarathchandra.com").replace(/\/+$/, "");
 
   assert.equal(seo.getPublicSiteUrl(), expectedPublicSiteUrl);
   assert.equal(seo.absoluteUrl("/tools/link-budget"), `${expectedPublicSiteUrl}/tools/link-budget`);
@@ -1040,6 +1040,8 @@ test("phase 13 CI and release artifacts are checked in", () => {
   assert.ok(deployWorkflow.includes("workflow_dispatch:"));
   assert.ok(deployWorkflow.includes("workflow_run:"));
   assert.ok(deployWorkflow.includes("HOSTINGER_AUTO_DEPLOY"));
+  assert.ok(deployWorkflow.includes("quantum-workbench.sarathchandra.com"));
+  assert.ok(deployWorkflow.includes("BASE_PATH: ${{ vars.HOSTINGER_BASE_PATH || '__root__' }}"));
   assert.ok(deployWorkflow.includes("StrictHostKeyChecking=yes"));
   assert.ok(deployWorkflow.includes("scripts/hostinger-deploy.sh"));
   assert.ok(deployWorkflow.includes("concurrency:"));
@@ -1058,6 +1060,8 @@ test("phase 13 CI and release artifacts are checked in", () => {
   assert.ok(hostingerDoc.includes("nginx-subpath-location.conf"));
   assert.ok(hostingerDoc.includes("scripts/hostinger-deploy.sh"));
   assert.ok(hostingerDoc.includes("GitHub Actions Deployment"));
+  assert.ok(hostingerDoc.includes("curl -I http://quantum-workbench.sarathchandra.com/"));
+  assert.ok(hostingerDoc.includes("choose option `1`"));
 
   const actionsDeploymentDoc = fs.readFileSync(path.join(projectRoot, "docs", "GITHUB_ACTIONS_DEPLOYMENT.md"), "utf8");
   assert.ok(actionsDeploymentDoc.includes("HOSTINGER_SSH_KNOWN_HOSTS"));
@@ -1073,6 +1077,10 @@ test("phase 13 CI and release artifacts are checked in", () => {
   const nginxSubpath = fs.readFileSync(path.join(projectRoot, "ops", "hostinger", "nginx-subpath-location.conf"), "utf8");
   assert.ok(nginxSubpath.includes("location /quantumworkbench/"));
   assert.ok(nginxSubpath.includes("proxy_pass http://127.0.0.1:3000"));
+
+  const nginxSubdomain = fs.readFileSync(path.join(projectRoot, "ops", "hostinger", "nginx-subdomain-site.conf"), "utf8");
+  assert.ok(nginxSubdomain.includes("server_name quantum-workbench.sarathchandra.com;"));
+  assert.ok(nginxSubdomain.includes("proxy_pass http://127.0.0.1:3000"));
 
   const releaseChecklist = fs.readFileSync(path.join(projectRoot, "docs", "RELEASE_CHECKLIST.md"), "utf8");
   assert.ok(releaseChecklist.includes("npm run lint"));

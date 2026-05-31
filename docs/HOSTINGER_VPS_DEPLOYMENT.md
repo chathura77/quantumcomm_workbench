@@ -91,8 +91,7 @@ bash scripts/hostinger-deploy.sh
 
 ```bash
 sudo cp ops/hostinger/nginx-subdomain-site.conf /etc/nginx/sites-available/quantumcomm-workbench
-sudo sed -i 's/quantumworkbench.sarathchandra.com/quantum-workbench.sarathchandra.com/g' /etc/nginx/sites-available/quantumcomm-workbench
-sudo ln -s /etc/nginx/sites-available/quantumcomm-workbench /etc/nginx/sites-enabled/quantumcomm-workbench
+sudo ln -sf /etc/nginx/sites-available/quantumcomm-workbench /etc/nginx/sites-enabled/quantumcomm-workbench
 sudo nginx -t
 sudo systemctl reload nginx
 ```
@@ -111,15 +110,19 @@ sudo ufw status verbose
 Issue the HTTPS certificate after DNS resolves to the VPS:
 
 ```bash
+curl -I http://quantum-workbench.sarathchandra.com/
 sudo certbot --nginx -d quantum-workbench.sarathchandra.com
 sudo certbot renew --dry-run
 ```
+
+The HTTP check should return `200` before running Certbot. If Certbot reports that an existing certificate already matches the domain, choose option `1` to reinstall the existing certificate unless you intentionally need a fresh renewal. Avoid option `2` unless needed because repeated renewals can hit certificate authority rate limits.
 
 ### 8. Verify Production
 
 ```bash
 sudo systemctl status quantumcomm-workbench
 curl -I http://127.0.0.1:3000/
+curl -I http://quantum-workbench.sarathchandra.com/
 curl -I https://quantum-workbench.sarathchandra.com/
 ```
 
@@ -181,10 +184,10 @@ For `https://www.sarathchandra.com/quantumworkbench`:
 - Set `NEXT_PUBLIC_SITE_URL=https://www.sarathchandra.com/quantumworkbench`.
 - Paste `ops/hostinger/nginx-subpath-location.conf` into the existing `sarathchandra.com` HTTPS server block.
 
-For `https://quantumworkbench.sarathchandra.com`:
+For `https://quantum-workbench.sarathchandra.com`:
 
 - Leave `QUANTUMCOMM_BASE_PATH` empty.
-- Set `NEXT_PUBLIC_SITE_URL=https://quantumworkbench.sarathchandra.com`.
+- Set `NEXT_PUBLIC_SITE_URL=https://quantum-workbench.sarathchandra.com`.
 - Use `ops/hostinger/nginx-subdomain-site.conf` as a new Nginx site.
 
 The path deployment is useful when the app should feel like part of the existing site. The subdomain deployment is operationally cleaner if the main website is already managed elsewhere.
@@ -229,19 +232,19 @@ git clone https://github.com/chathura77/quantumcomm_workbench.git /var/www/quant
 cd /var/www/quantumcomm_workbench
 ```
 
-Run the deployment script for the path deployment:
+Run the deployment script for the live subdomain deployment:
+
+```bash
+QUANTUMCOMM_BASE_PATH= \
+NEXT_PUBLIC_SITE_URL=https://quantum-workbench.sarathchandra.com \
+bash scripts/hostinger-deploy.sh
+```
+
+Or run it for the old path deployment:
 
 ```bash
 QUANTUMCOMM_BASE_PATH=/quantumworkbench \
 NEXT_PUBLIC_SITE_URL=https://www.sarathchandra.com/quantumworkbench \
-bash scripts/hostinger-deploy.sh
-```
-
-Or run it for a true subdomain:
-
-```bash
-QUANTUMCOMM_BASE_PATH= \
-NEXT_PUBLIC_SITE_URL=https://quantumworkbench.sarathchandra.com \
 bash scripts/hostinger-deploy.sh
 ```
 
@@ -290,7 +293,7 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-Create an A record for `quantumworkbench.sarathchandra.com` pointing to the VPS IP.
+Create an A record for `quantum-workbench.sarathchandra.com` pointing to the VPS IP.
 
 ## TLS
 
@@ -298,7 +301,7 @@ After DNS resolves to the VPS, install Certbot and issue a certificate:
 
 ```bash
 sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d quantumworkbench.sarathchandra.com
+sudo certbot --nginx -d quantum-workbench.sarathchandra.com
 ```
 
 For the path deployment, TLS is normally handled by the existing `sarathchandra.com` site certificate.
@@ -342,11 +345,12 @@ Use that sparingly. The normal update path should run checks before restarting t
 sudo systemctl status quantumcomm-workbench
 sudo journalctl -u quantumcomm-workbench -f
 sudo systemctl restart quantumcomm-workbench
-curl -I http://127.0.0.1:3000/quantumworkbench/
-curl -I https://www.sarathchandra.com/quantumworkbench/
+curl -I http://127.0.0.1:3000/
+curl -I http://quantum-workbench.sarathchandra.com/
+curl -I https://quantum-workbench.sarathchandra.com/
 ```
 
-For a subdomain deployment, replace `/quantumworkbench/` with `/`.
+For the old path deployment, replace `/` with `/quantumworkbench/` and check `https://www.sarathchandra.com/quantumworkbench/`.
 
 ## Rollback
 

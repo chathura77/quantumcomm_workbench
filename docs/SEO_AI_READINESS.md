@@ -7,13 +7,13 @@ QuantumComm Workbench exposes both human-readable pages and machine-readable ind
 By default, generated canonical URLs point to:
 
 ```text
-https://www.sarathchandra.com/quantumworkbench
+https://quantum-workbench.sarathchandra.com
 ```
 
 For a true subdomain deployment, set the canonical base URL before build:
 
 ```bash
-NEXT_PUBLIC_SITE_URL=https://quantumworkbench.sarathchandra.com npm run build
+NEXT_PUBLIC_SITE_URL=https://quantum-workbench.sarathchandra.com npm run build
 ```
 
 For the path deployment, combine canonical URL and base path:

@@ -40,14 +40,16 @@ Terminate TLS at Nginx, Caddy, or a load balancer, and expose only ports 80/443 
 
 ### Domain mode
 
-To deploy under a path on `sarathchandra.com`, build with a base path:
+The production deployment currently uses the subdomain `https://quantum-workbench.sarathchandra.com`, so leave `QUANTUMCOMM_BASE_PATH` empty for VPS and GitHub Actions deploys.
+
+To deploy under a path on `sarathchandra.com` instead, build with a base path:
 
 ```bash
 QUANTUMCOMM_BASE_PATH=/quantumworkbench npm run build
 npm run start -- --hostname 127.0.0.1 --port 3000
 ```
 
-If you deploy it on a true subdomain such as `quantumworkbench.sarathchandra.com`, leave `QUANTUMCOMM_BASE_PATH` unset.
+If you deploy it on a true subdomain such as `quantum-workbench.sarathchandra.com`, leave `QUANTUMCOMM_BASE_PATH` unset or explicitly empty.
 
 ### Hostinger VPS first deployment
 
@@ -60,12 +62,20 @@ sudo apt update
 sudo apt install -y git curl ca-certificates nginx
 git clone https://github.com/chathura77/quantumcomm_workbench.git /var/www/quantumcomm_workbench
 cd /var/www/quantumcomm_workbench
+QUANTUMCOMM_BASE_PATH= \
+NEXT_PUBLIC_SITE_URL=https://quantum-workbench.sarathchandra.com \
+bash scripts/hostinger-deploy.sh
+```
+
+For the old path deployment instead, run:
+
+```bash
 QUANTUMCOMM_BASE_PATH=/quantumworkbench \
 NEXT_PUBLIC_SITE_URL=https://www.sarathchandra.com/quantumworkbench \
 bash scripts/hostinger-deploy.sh
 ```
 
-For Nginx, use `ops/hostinger/nginx-subpath-location.conf` inside the existing `sarathchandra.com` server block, or `ops/hostinger/nginx-subdomain-site.conf` for a dedicated `quantumworkbench.sarathchandra.com` site. Full VPS steps are in `docs/HOSTINGER_VPS_DEPLOYMENT.md`.
+For Nginx, use `ops/hostinger/nginx-subpath-location.conf` inside the existing `sarathchandra.com` server block, or `ops/hostinger/nginx-subdomain-site.conf` for the dedicated `quantum-workbench.sarathchandra.com` site. Full VPS steps are in `docs/HOSTINGER_VPS_DEPLOYMENT.md`.
 
 For a brand-new VPS, DNS, TLS, firewall, and GitHub Actions setup from scratch, use the `New VPS From Scratch` checklist in `docs/HOSTINGER_VPS_DEPLOYMENT.md`.
 
@@ -88,12 +98,12 @@ Useful optional Actions variables:
 
 ```text
 HOSTINGER_APP_DIR=/var/www/quantumcomm_workbench
-HOSTINGER_BASE_PATH=/quantumworkbench
-HOSTINGER_SITE_URL=https://www.sarathchandra.com/quantumworkbench
-HOSTINGER_PUBLIC_HEALTH_URL=https://www.sarathchandra.com/quantumworkbench/
+HOSTINGER_BASE_PATH=__root__
+HOSTINGER_SITE_URL=https://quantum-workbench.sarathchandra.com
+HOSTINGER_PUBLIC_HEALTH_URL=https://quantum-workbench.sarathchandra.com/
 ```
 
-For a true subdomain deployment, set `HOSTINGER_BASE_PATH=__root__`. Full Actions setup is in `docs/GITHUB_ACTIONS_DEPLOYMENT.md`.
+For the old path deployment, set `HOSTINGER_BASE_PATH=/quantumworkbench` and point the site/health URLs at `https://www.sarathchandra.com/quantumworkbench`. Full Actions setup is in `docs/GITHUB_ACTIONS_DEPLOYMENT.md`.
 
 ### Manual update flow
 
@@ -121,8 +131,8 @@ On the VPS:
 sudo systemctl status quantumcomm-workbench
 sudo journalctl -u quantumcomm-workbench -f
 sudo systemctl restart quantumcomm-workbench
-curl -I http://127.0.0.1:3000/quantumworkbench/
-curl -I https://www.sarathchandra.com/quantumworkbench/
+curl -I http://127.0.0.1:3000/
+curl -I https://quantum-workbench.sarathchandra.com/
 sudo nginx -t
 sudo systemctl reload nginx
 npm audit --audit-level=high

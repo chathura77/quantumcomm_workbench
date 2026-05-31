@@ -38,9 +38,9 @@ Create these under `Settings` -> `Secrets and variables` -> `Actions` -> `Variab
 | --- | --- | --- |
 | `HOSTINGER_AUTO_DEPLOY` | unset | Set to `true` to deploy automatically after `CI` passes on `main`. Leave unset for manual-only deployment. |
 | `HOSTINGER_APP_DIR` | `/var/www/quantumcomm_workbench` | Repository checkout directory on the VPS. |
-| `HOSTINGER_BASE_PATH` | `/quantumworkbench` | Next.js base path for `sarathchandra.com/quantumworkbench`. Use `__root__` for a true subdomain with no base path. |
-| `HOSTINGER_SITE_URL` | `https://www.sarathchandra.com/quantumworkbench` | Canonical public site URL. |
-| `HOSTINGER_PUBLIC_HEALTH_URL` | `https://www.sarathchandra.com/quantumworkbench/` | Public URL checked after deployment. |
+| `HOSTINGER_BASE_PATH` | `__root__` | Next.js base path. Use `__root__` for `quantum-workbench.sarathchandra.com`; use `/quantumworkbench` only for the old path deployment. |
+| `HOSTINGER_SITE_URL` | `https://quantum-workbench.sarathchandra.com` | Canonical public site URL. |
+| `HOSTINGER_PUBLIC_HEALTH_URL` | `https://quantum-workbench.sarathchandra.com/` | Public URL checked after deployment. |
 
 ## First-Time Setup
 

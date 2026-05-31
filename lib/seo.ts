@@ -8,7 +8,7 @@ export type SeoPage = {
   priority: number;
 };
 
-const defaultPublicSiteUrl = "https://www.sarathchandra.com/quantumworkbench";
+const defaultPublicSiteUrl = "https://quantum-workbench.sarathchandra.com";
 
 function normalizePublicUrl(value: string) {
   return value.replace(/\/+$/, "");
