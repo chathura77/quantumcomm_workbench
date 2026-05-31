@@ -1064,6 +1064,7 @@ test("phase 13 CI and release artifacts are checked in", () => {
   assert.ok(actionsDeploymentDoc.includes("sudo -n true"));
 
   const hostingerScript = fs.readFileSync(path.join(projectRoot, "scripts", "hostinger-deploy.sh"), "utf8");
+  assert.ok(hostingerScript.includes("${QUANTUMCOMM_BASE_PATH+x}"));
   assert.ok(hostingerScript.includes("git pull --ff-only"));
   assert.ok(hostingerScript.includes("systemctl restart"));
   assert.ok(hostingerScript.includes("npm run build"));

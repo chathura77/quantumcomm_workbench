@@ -7,10 +7,13 @@ ENV_FILE="${ENV_FILE:-/etc/quantumcomm-workbench.env}"
 BRANCH="${BRANCH:-main}"
 APP_HOST="${APP_HOST:-127.0.0.1}"
 PORT="${PORT:-3000}"
-QUANTUMCOMM_BASE_PATH="${QUANTUMCOMM_BASE_PATH:-/quantumworkbench}"
 NEXT_PUBLIC_SITE_URL="${NEXT_PUBLIC_SITE_URL:-https://www.sarathchandra.com/quantumworkbench}"
 RUN_CHECKS="${RUN_CHECKS:-1}"
 PULL_LATEST="${PULL_LATEST:-1}"
+
+if [[ -z "${QUANTUMCOMM_BASE_PATH+x}" ]]; then
+  QUANTUMCOMM_BASE_PATH="/quantumworkbench"
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
