@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+import { handleValidatedJsonPost } from "@/lib/security/api";
 import { analyzeQber } from "@/lib/qkd/qber";
-import { qberForensicsInputSchema, validationErrorResponse } from "@/lib/validation/schemas";
+import { qberForensicsInputSchema } from "@/lib/validation/schemas";
 
 export async function POST(request: Request) {
-  const parsed = qberForensicsInputSchema.safeParse(await request.json());
-  if (!parsed.success) {
-    return NextResponse.json(validationErrorResponse(parsed.error), { status: 400 });
-  }
-  return NextResponse.json(analyzeQber(parsed.data));
+  return handleValidatedJsonPost(request, {
+    routeId: "simulations.qkd.qber-forensics",
+    schema: qberForensicsInputSchema,
+    handler: analyzeQber
+  });
 }

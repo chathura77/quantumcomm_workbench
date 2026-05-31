@@ -5,7 +5,10 @@ import { disclaimer, mainNav } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "QuantumComm Workbench",
-  description: "Quantum communication calculators, QKD API sandboxes, and network scenario tools."
+  description: "Quantum communication calculators, QKD API sandboxes, and network scenario tools.",
+  icons: {
+    icon: "/icon.svg"
+  }
 };
 
 const sourceRepositoryUrl = "https://github.com/chathura77/quantumcomm_workbench";

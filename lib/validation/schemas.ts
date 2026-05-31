@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+const shortIdSchema = z.string().trim().min(1).max(80).regex(/^[A-Za-z0-9._:-]+$/, "Use letters, numbers, dot, underscore, colon, or hyphen.");
+const labelSchema = z.string().trim().min(1).max(160);
+const boundedTextSchema = z.string().trim().min(1).max(1000);
+const finiteNumberSchema = z.number().finite();
+
 export const qkdProtocolSchema = z.enum([
   "bb84",
   "decoy_bb84",
@@ -11,8 +16,8 @@ export const qkdProtocolSchema = z.enum([
 ]);
 
 export const modelWarningSchema = z.object({
-  code: z.string(),
-  message: z.string(),
+  code: shortIdSchema,
+  message: boundedTextSchema,
   severity: z.enum(["info", "warning", "critical"])
 });
 
@@ -159,30 +164,34 @@ export const attackInputSchema = z.object({
     "trojan_horse_risk",
     "dos_background"
   ]),
-  parameters: z.record(z.union([z.number(), z.boolean(), z.string()]))
+  parameters: z.record(z.union([finiteNumberSchema, z.boolean(), z.string().max(500)]))
+    .refine((parameters) => Object.keys(parameters).length <= 50, "Attack model parameter maps are limited to 50 entries.")
 });
 
 export const kmsServiceSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().min(1),
+  id: shortIdSchema,
+  name: labelSchema,
   priority: z.number().int().min(0),
   requestRatePerSecond: z.number().min(0),
   bitsPerRequest: z.number().int().min(1)
 });
 
 export const kmsSimulationInputSchema = z.object({
-  durationSeconds: z.number().min(1),
-  timeStepSeconds: z.number().min(0.001),
-  initialBufferBits: z.number().min(0),
-  bufferCapacityBits: z.number().min(1),
-  generationRateBitsPerSecond: z.number().min(0),
-  keyTtlSeconds: z.number().min(1),
-  services: z.array(kmsServiceSchema).min(1)
+  durationSeconds: z.number().min(1).max(86_400),
+  timeStepSeconds: z.number().min(0.001).max(86_400),
+  initialBufferBits: z.number().min(0).max(1_000_000_000_000),
+  bufferCapacityBits: z.number().min(1).max(1_000_000_000_000),
+  generationRateBitsPerSecond: z.number().min(0).max(1_000_000_000_000),
+  keyTtlSeconds: z.number().min(1).max(31_536_000),
+  services: z.array(kmsServiceSchema).min(1).max(20)
+}).refine((input) => Math.ceil(input.durationSeconds / input.timeStepSeconds) <= 20_000, {
+  message: "KMS simulations are limited to 20,000 time steps. Increase the time step or shorten the duration.",
+  path: ["timeStepSeconds"]
 });
 
 export const quantumNodeSchema = z.object({
-  id: z.string().min(1),
-  label: z.string().min(1),
+  id: shortIdSchema,
+  label: labelSchema,
   type: z.enum(["endpoint", "trusted_node", "repeater", "satellite", "ground_station", "memory_node"]),
   memoryLifetimeMs: z.number().min(0).optional(),
   memoryCount: z.number().int().min(0).optional(),
@@ -191,9 +200,9 @@ export const quantumNodeSchema = z.object({
 });
 
 export const quantumLinkSchema = z.object({
-  id: z.string().min(1),
-  source: z.string().min(1),
-  target: z.string().min(1),
+  id: shortIdSchema,
+  source: shortIdSchema,
+  target: shortIdSchema,
   lengthKm: z.number().min(0),
   attenuationDbPerKm: z.number().min(0).optional(),
   lossDb: z.number().min(0).optional(),
@@ -203,18 +212,18 @@ export const quantumLinkSchema = z.object({
 });
 
 export const quantumNetworkScenarioSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().min(1),
-  description: z.string().optional(),
-  nodes: z.array(quantumNodeSchema).min(1),
-  links: z.array(quantumLinkSchema),
+  id: shortIdSchema,
+  name: labelSchema,
+  description: z.string().max(2000).optional(),
+  nodes: z.array(quantumNodeSchema).min(1).max(200),
+  links: z.array(quantumLinkSchema).max(500),
   metadata: z.record(z.unknown()).optional()
 }).strict();
 
 export const routeInputSchema = z.object({
   scenario: quantumNetworkScenarioSchema,
-  sourceNodeId: z.string().min(1),
-  targetNodeId: z.string().min(1),
+  sourceNodeId: shortIdSchema,
+  targetNodeId: shortIdSchema,
   objective: z.enum(["rate", "fidelity", "latency", "balanced"])
 });
 
@@ -228,24 +237,26 @@ export const repeaterOptimizeInputSchema = z.object({
 });
 
 export const keyRequestSchema = z.object({
-  applicationId: z.string().min(1),
+  applicationId: shortIdSchema,
   keyLengthBits: z.number().int().min(1).max(1048576),
   numberOfKeys: z.number().int().min(1).max(100),
   priority: z.number().int().min(0).max(10)
 });
 
+export const keyIdSchema = shortIdSchema.max(128);
+
 export const keyDescriptorSchema = z.object({
-  keyId: z.string(),
-  applicationId: z.string(),
+  keyId: keyIdSchema,
+  applicationId: shortIdSchema,
   keyLengthBits: z.number().int(),
   createdAt: z.string(),
   expiresAt: z.string(),
-  keyMaterial: z.string(),
+  keyMaterial: z.string().max(500),
   demoOnly: z.literal(true)
 });
 
 export const keyPoolStatusSchema = z.object({
-  poolId: z.string(),
+  poolId: shortIdSchema,
   availableBits: z.number().int(),
   capacityBits: z.number().int(),
   refillRateBitsPerSecond: z.number(),
@@ -274,30 +285,30 @@ export const insufficientKeyMaterialSchema = z.object({
 
 export const unauthorizedApplicationSchema = z.object({
   error: z.literal("UnauthorizedApplication"),
-  message: z.string(),
-  applicationId: z.string(),
+  message: boundedTextSchema,
+  applicationId: z.string().max(80),
   authorizedApplications: z.array(z.string()).min(1),
   demoOnly: z.literal(true)
 });
 
 export const expiredKeyErrorSchema = z.object({
   error: z.literal("ExpiredKey"),
-  message: z.string(),
-  keyId: z.string(),
+  message: boundedTextSchema,
+  keyId: keyIdSchema,
   expiredAt: z.string(),
   demoOnly: z.literal(true)
 });
 
 export const reportExportInputSchema = z.object({
-  toolId: z.string().min(1),
-  title: z.string().min(1),
+  toolId: shortIdSchema,
+  title: labelSchema,
   input: z.record(z.unknown()),
   result: z.record(z.unknown()),
-  assumptions: z.array(z.string()),
-  warnings: z.array(modelWarningSchema),
-  references: z.array(z.string()).optional(),
-  formulas: z.array(z.string()).optional(),
-  version: z.string().optional(),
+  assumptions: z.array(boundedTextSchema).max(50),
+  warnings: z.array(modelWarningSchema).max(50),
+  references: z.array(z.string().max(1000)).max(50).optional(),
+  formulas: z.array(z.string().max(1000)).max(50).optional(),
+  version: shortIdSchema.optional(),
   format: z.enum(["json", "markdown"])
 });
 

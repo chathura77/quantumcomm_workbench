@@ -21,12 +21,12 @@ export type ConformanceExampleCase = {
 };
 
 const mockKeyDescriptor = {
-  keyId: "demo-app-0001",
+  keyId: "demo-app-0001-SAMPLE01",
   applicationId: "demo-app",
   keyLengthBits: 256,
   createdAt: "2026-05-30T00:00:00.000Z",
   expiresAt: "2026-05-30T01:00:00.000Z",
-  keyMaterial: "DEMO-ONLY-demo-app-0001-256b",
+  keyMaterial: "DEMO-ONLY-demo-app-0001-SAMPLE01-256b-sample-token",
   demoOnly: true as const
 };
 
@@ -72,8 +72,8 @@ export const mockApiExamples: MockApiExample[] = [
         mockKeyDescriptor,
         {
           ...mockKeyDescriptor,
-          keyId: "demo-app-0002",
-          keyMaterial: "DEMO-ONLY-demo-app-0002-256b"
+          keyId: "demo-app-0002-SAMPLE02",
+          keyMaterial: "DEMO-ONLY-demo-app-0002-SAMPLE02-256b-sample-token"
         }
       ],
       remainingPoolBits: 261632,
@@ -124,7 +124,7 @@ export const mockApiExamples: MockApiExample[] = [
     id: "key-retrieve-success",
     title: "Retrieve one descriptor",
     method: "GET",
-    endpoint: "/api/qkd-mock/keys/demo-app-0001",
+    endpoint: "/api/qkd-mock/keys/demo-app-0001-SAMPLE01",
     status: 200,
     description: "A descriptor lookup that returns the same demo-only marker instead of operational key escrow behavior.",
     responseBody: mockKeyDescriptor
@@ -133,13 +133,13 @@ export const mockApiExamples: MockApiExample[] = [
     id: "key-retrieve-expired",
     title: "Expired key retrieval",
     method: "GET",
-    endpoint: "/api/qkd-mock/keys/demo-app-0001",
+    endpoint: "/api/qkd-mock/keys/demo-app-0001-SAMPLE01",
     status: 410,
     description: "An expired key is removed from the active pool and cannot be reused after its TTL window closes.",
     responseBody: {
       error: "ExpiredKey",
       message: "This demo key expired and was cleaned from the active pool. Request fresh material instead of reusing stale mock keys.",
-      keyId: "demo-app-0001",
+      keyId: "demo-app-0001-SAMPLE01",
       expiredAt: "2026-05-30T01:00:00.000Z",
       demoOnly: true
     }
@@ -211,11 +211,11 @@ export const conformanceExampleCases: ConformanceExampleCase[] = [
     payload: {
       keys: [
         {
-          keyId: "demo-app-0003",
+          keyId: "demo-app-0003-SAMPLE03",
           applicationId: "demo-app",
           keyLengthBits: 256,
           createdAt: "2026-05-30T00:00:00.000Z",
-          keyMaterial: "DEMO-ONLY-demo-app-0003-256b",
+          keyMaterial: "DEMO-ONLY-demo-app-0003-SAMPLE03-256b-sample-token",
           demoOnly: true
         }
       ],
@@ -264,11 +264,11 @@ export const conformanceExampleCases: ConformanceExampleCase[] = [
     expectedOk: false,
     summary: "Fails because TTL-style expiry metadata is required for lifecycle-oriented checks.",
     payload: {
-      keyId: "demo-app-0004",
+      keyId: "demo-app-0004-SAMPLE04",
       applicationId: "demo-app",
       keyLengthBits: 256,
       createdAt: "2026-05-30T00:00:00.000Z",
-      keyMaterial: "DEMO-ONLY-demo-app-0004-256b",
+      keyMaterial: "DEMO-ONLY-demo-app-0004-SAMPLE04-256b-sample-token",
       demoOnly: true
     }
   },
@@ -281,7 +281,7 @@ export const conformanceExampleCases: ConformanceExampleCase[] = [
     payload: {
       error: "ExpiredKey",
       message: "This demo key expired and was cleaned from the active pool. Request fresh material instead of reusing stale mock keys.",
-      keyId: "demo-app-0001",
+      keyId: "demo-app-0001-SAMPLE01",
       expiredAt: "2026-05-30T01:00:00.000Z",
       demoOnly: true
     }

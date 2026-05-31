@@ -1,12 +1,11 @@
-import { NextResponse } from "next/server";
+import { handleValidatedJsonPost } from "@/lib/security/api";
 import { estimateFiniteKeyBb84 } from "@/lib/qkd/finiteKeyBb84";
-import { finiteKeyBb84InputSchema, validationErrorResponse } from "@/lib/validation/schemas";
+import { finiteKeyBb84InputSchema } from "@/lib/validation/schemas";
 
 export async function POST(request: Request) {
-  const parsed = finiteKeyBb84InputSchema.safeParse(await request.json());
-  if (!parsed.success) {
-    return NextResponse.json(validationErrorResponse(parsed.error), { status: 400 });
-  }
-
-  return NextResponse.json(estimateFiniteKeyBb84(parsed.data));
+  return handleValidatedJsonPost(request, {
+    routeId: "simulations.qkd.finite-key-bb84",
+    schema: finiteKeyBb84InputSchema,
+    handler: estimateFiniteKeyBb84
+  });
 }

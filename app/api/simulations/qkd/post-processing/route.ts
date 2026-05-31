@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+import { handleValidatedJsonPost } from "@/lib/security/api";
 import { estimatePostProcessing } from "@/lib/qkd/postProcessing";
-import { postProcessingInputSchema, validationErrorResponse } from "@/lib/validation/schemas";
+import { postProcessingInputSchema } from "@/lib/validation/schemas";
 
 export async function POST(request: Request) {
-  const parsed = postProcessingInputSchema.safeParse(await request.json());
-  if (!parsed.success) {
-    return NextResponse.json(validationErrorResponse(parsed.error), { status: 400 });
-  }
-  return NextResponse.json(estimatePostProcessing(parsed.data));
+  return handleValidatedJsonPost(request, {
+    routeId: "simulations.qkd.post-processing",
+    schema: postProcessingInputSchema,
+    handler: estimatePostProcessing
+  });
 }

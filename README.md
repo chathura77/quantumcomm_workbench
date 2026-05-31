@@ -13,6 +13,21 @@ npm run dev
 
 Open `http://localhost:3000`.
 
+## Production run path
+
+For a public VM, build and run the production server rather than the development server:
+
+```bash
+npm ci
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+npm run start -- --hostname 0.0.0.0 --port 3000
+```
+
+Terminate TLS at a reverse proxy such as Caddy, Nginx, or a cloud load balancer, and expose only ports 80/443 publicly. The app sets browser security headers and API no-store headers, but the mock QKD API remains educational demo infrastructure and must not be wired to production secrets. See `docs/SECURITY_HARDENING.md` for the current hardening posture and residual risks.
+
 ## Verification
 
 ```bash
@@ -37,6 +52,7 @@ For responsive/manual UI review after layout or shared-component changes, use `d
 
 - Pure kernels: `lib/qkd`, `lib/kms`, `lib/network`, `lib/standards`.
 - Validation: `lib/validation/schemas.ts`.
+- API hardening helpers: `lib/security`.
 - UI routes: `app/`.
 - Seed fixtures: `fixtures/`.
 - Contracts and docs: `contracts/`, `docs/`.

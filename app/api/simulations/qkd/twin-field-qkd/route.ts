@@ -1,12 +1,11 @@
-import { NextResponse } from "next/server";
+import { handleValidatedJsonPost } from "@/lib/security/api";
 import { estimateTwinFieldQkd } from "@/lib/qkd/twinFieldQkd";
-import { twinFieldQkdInputSchema, validationErrorResponse } from "@/lib/validation/schemas";
+import { twinFieldQkdInputSchema } from "@/lib/validation/schemas";
 
 export async function POST(request: Request) {
-  const parsed = twinFieldQkdInputSchema.safeParse(await request.json());
-  if (!parsed.success) {
-    return NextResponse.json(validationErrorResponse(parsed.error), { status: 400 });
-  }
-
-  return NextResponse.json(estimateTwinFieldQkd(parsed.data));
+  return handleValidatedJsonPost(request, {
+    routeId: "simulations.qkd.twin-field-qkd",
+    schema: twinFieldQkdInputSchema,
+    handler: estimateTwinFieldQkd
+  });
 }

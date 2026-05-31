@@ -97,6 +97,7 @@ const { estimatePostProcessing } = require("../lib/qkd/postProcessing.ts");
 const { analyzeQber } = require("../lib/qkd/qber.ts");
 const { checkMockQkdConformance } = require("../lib/standards/conformance.ts");
 const { __advanceMockPoolClockForTests, __resetMockPoolForTests } = require("../lib/standards/etsiMock.ts");
+const { __resetRateLimitForTests } = require("../lib/security/rateLimit.ts");
 const { conformanceExampleCases, mockApiExamples, serializeMockApiExampleBundle } = require("../lib/standards/mockExamples.ts");
 const { loadOpenApiContract } = require("../lib/standards/openapi.ts");
 
@@ -1522,6 +1523,58 @@ test("API routes return expected validation and not-found errors", async () => {
   }));
   assert.equal(badReport.status, 400);
   assertValidationError(await readJson(badReport));
+});
+
+test("API routes reject malformed, oversized, and computationally excessive requests", async () => {
+  const linkBudgetRoute = projectRequire("app/api/simulations/qkd/link-budget/route.ts");
+  const keyRetrieveRoute = projectRequire("app/api/qkd-mock/keys/[keyId]/route.ts");
+  const kmsRoute = projectRequire("app/api/simulations/kms/run/route.ts");
+  __resetRateLimitForTests();
+
+  const malformed = await linkBudgetRoute.POST(new Request("http://localhost/test", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: "{not-json"
+  }));
+  assert.equal(malformed.status, 400);
+  assert.equal((await readJson(malformed)).error, "MalformedJson");
+
+  const unsupportedMedia = await linkBudgetRoute.POST(new Request("http://localhost/test", {
+    method: "POST",
+    headers: { "content-type": "text/plain" },
+    body: JSON.stringify(baseLink)
+  }));
+  assert.equal(unsupportedMedia.status, 415);
+  assert.equal((await readJson(unsupportedMedia)).error, "UnsupportedMediaType");
+
+  const oversized = await linkBudgetRoute.POST(new Request("http://localhost/test", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "content-length": String(128 * 1024)
+    },
+    body: JSON.stringify(baseLink)
+  }));
+  assert.equal(oversized.status, 413);
+  assert.equal((await readJson(oversized)).error, "PayloadTooLarge");
+
+  const badKeyId = await keyRetrieveRoute.GET(new Request("http://localhost/test"), {
+    params: Promise.resolve({ keyId: "../not-allowed" })
+  });
+  assert.equal(badKeyId.status, 400);
+  assertValidationError(await readJson(badKeyId));
+
+  const excessiveKms = await kmsRoute.POST(createJsonRequest({
+    durationSeconds: 86_400,
+    timeStepSeconds: 0.001,
+    initialBufferBits: 1000,
+    bufferCapacityBits: 10000,
+    generationRateBitsPerSecond: 200,
+    keyTtlSeconds: 3600,
+    services: [{ id: "svc", name: "Service", priority: 1, requestRatePerSecond: 0.2, bitsPerRequest: 128 }]
+  }));
+  assert.equal(excessiveKms.status, 400);
+  assertValidationError(await readJson(excessiveKms));
 });
 
 (async () => {

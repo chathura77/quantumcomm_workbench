@@ -1,11 +1,13 @@
-import { NextResponse } from "next/server";
+import { handleValidatedJsonPost } from "@/lib/security/api";
 import { rankRoutes } from "@/lib/network/routing";
-import { routeInputSchema, validationErrorResponse } from "@/lib/validation/schemas";
+import { routeInputSchema } from "@/lib/validation/schemas";
 
 export async function POST(request: Request) {
-  const parsed = routeInputSchema.safeParse(await request.json());
-  if (!parsed.success) {
-    return NextResponse.json(validationErrorResponse(parsed.error), { status: 400 });
-  }
-  return NextResponse.json(rankRoutes(parsed.data));
+  return handleValidatedJsonPost(request, {
+    routeId: "simulations.network.route",
+    schema: routeInputSchema,
+    handler: rankRoutes,
+    bodyLimitBytes: 256 * 1024,
+    rateLimit: { limit: 60, windowMs: 60_000 }
+  });
 }

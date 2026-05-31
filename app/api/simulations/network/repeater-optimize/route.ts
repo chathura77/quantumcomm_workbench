@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+import { handleValidatedJsonPost } from "@/lib/security/api";
 import { optimizeRepeaterChain } from "@/lib/network/repeater";
-import { repeaterOptimizeInputSchema, validationErrorResponse } from "@/lib/validation/schemas";
+import { repeaterOptimizeInputSchema } from "@/lib/validation/schemas";
 
 export async function POST(request: Request) {
-  const parsed = repeaterOptimizeInputSchema.safeParse(await request.json());
-  if (!parsed.success) {
-    return NextResponse.json(validationErrorResponse(parsed.error), { status: 400 });
-  }
-  return NextResponse.json(optimizeRepeaterChain(parsed.data));
+  return handleValidatedJsonPost(request, {
+    routeId: "simulations.network.repeater-optimize",
+    schema: repeaterOptimizeInputSchema,
+    handler: optimizeRepeaterChain
+  });
 }

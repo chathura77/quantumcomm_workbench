@@ -1,3 +1,4 @@
+import { randomBytes, timingSafeEqual } from "node:crypto";
 import { keyRequestSchema } from "@/lib/validation/schemas";
 
 export const ETSI_MOCK_VERSION = "etsi-qkd-014-mock.lifecycle.v2";
@@ -108,6 +109,25 @@ function authorizedApplicationIds() {
   return Object.keys(AUTHORIZED_APPLICATIONS);
 }
 
+function randomToken(bytes = 12) {
+  return randomBytes(bytes).toString("base64url");
+}
+
+function demoKeyMaterial(keyId: string, keyLengthBits: number) {
+  return `DEMO-ONLY-${keyId}-${keyLengthBits}b-${randomToken(18)}`;
+}
+
+function tokenMatches(receivedToken: string | undefined, expectedToken: string) {
+  if (!receivedToken) return false;
+  const received = Buffer.from(receivedToken);
+  const expected = Buffer.from(expectedToken);
+  if (received.length !== expected.length) {
+    timingSafeEqual(expected, expected);
+    return false;
+  }
+  return timingSafeEqual(received, expected);
+}
+
 function unauthorizedBody(applicationId: string | undefined) {
   return {
     error: "UnauthorizedApplication" as const,
@@ -120,7 +140,7 @@ function unauthorizedBody(applicationId: string | undefined) {
 
 function authorizeRequest(applicationId: string, token: string | undefined) {
   const expectedToken = AUTHORIZED_APPLICATIONS[applicationId as AuthorizedApplicationId];
-  if (!expectedToken || token !== expectedToken) {
+  if (!expectedToken || !tokenMatches(token, expectedToken)) {
     return {
       ok: false as const,
       status: 403,
@@ -191,7 +211,7 @@ export function requestMockKeys(input: unknown, auth: AuthorizationContext = {})
   const expiresAt = new Date(expiresAtMs).toISOString();
   const keys: MockKeyDescriptor[] = Array.from({ length: request.numberOfKeys }, () => {
     pool.counter += 1;
-    const keyId = `${request.applicationId}-${pool.counter.toString().padStart(4, "0")}`;
+    const keyId = `${request.applicationId}-${pool.counter.toString().padStart(4, "0")}-${randomToken(6)}`;
     const descriptor: StoredKeyDescriptor = {
       keyId,
       applicationId: request.applicationId,
@@ -201,7 +221,7 @@ export function requestMockKeys(input: unknown, auth: AuthorizationContext = {})
       expiresAt,
       expiresAtMs,
       priority: request.priority,
-      keyMaterial: `DEMO-ONLY-${keyId}-${request.keyLengthBits}b`,
+      keyMaterial: demoKeyMaterial(keyId, request.keyLengthBits),
       demoOnly: true
     };
     pool.keys.set(keyId, descriptor);
