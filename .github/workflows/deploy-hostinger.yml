@@ -1,0 +1,133 @@
+name: Deploy Hostinger VPS
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Git branch to deploy from the VPS checkout."
+        required: true
+        default: main
+      run_checks:
+        description: "Run lint, typecheck, and unit tests on the VPS before restart."
+        required: true
+        default: "1"
+        type: choice
+        options:
+          - "1"
+          - "0"
+  workflow_run:
+    workflows:
+      - CI
+    branches:
+      - main
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hostinger-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy production service
+    runs-on: ubuntu-latest
+    environment: production
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event_name == 'workflow_run' &&
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push' &&
+        vars.HOSTINGER_AUTO_DEPLOY == 'true'
+      )
+    env:
+      DEPLOY_BRANCH: ${{ github.event_name == 'workflow_dispatch' && inputs.branch || 'main' }}
+      RUN_CHECKS: ${{ github.event_name == 'workflow_dispatch' && inputs.run_checks || '1' }}
+      APP_DIR: ${{ vars.HOSTINGER_APP_DIR || '/var/www/quantumcomm_workbench' }}
+      BASE_PATH: ${{ vars.HOSTINGER_BASE_PATH || '/quantumworkbench' }}
+      SITE_URL: ${{ vars.HOSTINGER_SITE_URL || 'https://www.sarathchandra.com/quantumworkbench' }}
+      PUBLIC_HEALTH_URL: ${{ vars.HOSTINGER_PUBLIC_HEALTH_URL || 'https://www.sarathchandra.com/quantumworkbench/' }}
+      VPS_HOST: ${{ secrets.HOSTINGER_VPS_HOST }}
+      VPS_USER: ${{ secrets.HOSTINGER_VPS_USER }}
+      VPS_SSH_KEY: ${{ secrets.HOSTINGER_VPS_SSH_KEY }}
+      VPS_SSH_PORT: ${{ secrets.HOSTINGER_VPS_SSH_PORT || '22' }}
+      VPS_KNOWN_HOSTS: ${{ secrets.HOSTINGER_SSH_KNOWN_HOSTS }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate deployment assets
+        run: |
+          set -Eeuo pipefail
+          test -f scripts/hostinger-deploy.sh
+          test -f docs/HOSTINGER_VPS_DEPLOYMENT.md
+          test -f ops/hostinger/nginx-subpath-location.conf
+
+      - name: Validate deployment secrets
+        run: |
+          set -Eeuo pipefail
+          declare -A required_secrets=(
+            [VPS_HOST]=HOSTINGER_VPS_HOST
+            [VPS_USER]=HOSTINGER_VPS_USER
+            [VPS_SSH_KEY]=HOSTINGER_VPS_SSH_KEY
+            [VPS_KNOWN_HOSTS]=HOSTINGER_SSH_KNOWN_HOSTS
+          )
+          missing=0
+          for name in "${!required_secrets[@]}"; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Missing required secret ${required_secrets[$name]}"
+              missing=1
+            fi
+          done
+          if [[ "${missing}" -ne 0 ]]; then
+            exit 1
+          fi
+
+      - name: Configure SSH
+        run: |
+          set -Eeuo pipefail
+          install -m 0700 -d "${HOME}/.ssh"
+          printf "%s" "${VPS_SSH_KEY}" | tr -d '\r' > "${HOME}/.ssh/hostinger_deploy_key"
+          printf "%s\n" "${VPS_KNOWN_HOSTS}" | tr -d '\r' > "${HOME}/.ssh/known_hosts"
+          chmod 0600 "${HOME}/.ssh/hostinger_deploy_key" "${HOME}/.ssh/known_hosts"
+
+      - name: Deploy on Hostinger VPS
+        run: |
+          set -Eeuo pipefail
+          if [[ "${BASE_PATH}" == "__root__" ]]; then
+            BASE_PATH=""
+          fi
+
+          app_dir_q=$(printf "%q" "${APP_DIR}")
+          branch_q=$(printf "%q" "${DEPLOY_BRANCH}")
+          base_path_q=$(printf "%q" "${BASE_PATH}")
+          site_url_q=$(printf "%q" "${SITE_URL}")
+          run_checks_q=$(printf "%q" "${RUN_CHECKS}")
+
+          ssh \
+            -i "${HOME}/.ssh/hostinger_deploy_key" \
+            -p "${VPS_SSH_PORT}" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            "${VPS_USER}@${VPS_HOST}" \
+            "APP_DIR=${app_dir_q} DEPLOY_BRANCH=${branch_q} BASE_PATH=${base_path_q} SITE_URL=${site_url_q} RUN_CHECKS=${run_checks_q} bash -s" <<'REMOTE'
+          set -Eeuo pipefail
+          cd "${APP_DIR}"
+          sudo -n true
+          BRANCH="${DEPLOY_BRANCH}" \
+          QUANTUMCOMM_BASE_PATH="${BASE_PATH}" \
+          NEXT_PUBLIC_SITE_URL="${SITE_URL}" \
+          RUN_CHECKS="${RUN_CHECKS}" \
+          bash scripts/hostinger-deploy.sh
+          REMOTE
+
+      - name: Public health check
+        if: env.PUBLIC_HEALTH_URL != ''
+        run: |
+          set -Eeuo pipefail
+          curl --fail --silent --show-error --retry 6 --retry-delay 10 --max-time 20 "${PUBLIC_HEALTH_URL}" >/dev/null

@@ -25,4 +25,5 @@
 
 - Update `docs/ROADMAP.md` progress notes when a phase meaningfully advances.
 - Check that docs describing contracts, routes, and simulator mappings still match the code.
+- Confirm the GitHub Actions `CI` workflow is green before triggering `Deploy Hostinger VPS`.
 - Record any known gaps or follow-up work before publishing.

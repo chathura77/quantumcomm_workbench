@@ -1020,16 +1020,29 @@ test("phase 13 CI and release artifacts are checked in", () => {
   assert.ok(smokeScript.includes("baseUrl = `http://${host}:${address.port}`;"));
 
   const ciWorkflow = fs.readFileSync(path.join(projectRoot, ".github", "workflows", "ci.yml"), "utf8");
+  assert.ok(ciWorkflow.includes("permissions:"));
   assert.ok(ciWorkflow.includes("npm ci"));
   assert.ok(ciWorkflow.includes("npm run lint"));
   assert.ok(ciWorkflow.includes("npm run typecheck"));
   assert.ok(ciWorkflow.includes("npm run test"));
   assert.ok(ciWorkflow.includes("npm run build"));
   assert.ok(ciWorkflow.includes("npm run test:e2e"));
+  assert.ok(ciWorkflow.includes("Build Hostinger path target"));
+  assert.ok(ciWorkflow.includes("QUANTUMCOMM_BASE_PATH: /quantumworkbench"));
 
   const auditWorkflow = fs.readFileSync(path.join(projectRoot, ".github", "workflows", "dependency-audit.yml"), "utf8");
   assert.ok(auditWorkflow.includes("npm audit --audit-level=high"));
   assert.ok(auditWorkflow.includes("schedule:"));
+  assert.ok(auditWorkflow.includes("permissions:"));
+
+  const deployWorkflow = fs.readFileSync(path.join(projectRoot, ".github", "workflows", "deploy-hostinger.yml"), "utf8");
+  assert.ok(deployWorkflow.includes("workflow_dispatch:"));
+  assert.ok(deployWorkflow.includes("workflow_run:"));
+  assert.ok(deployWorkflow.includes("HOSTINGER_AUTO_DEPLOY"));
+  assert.ok(deployWorkflow.includes("StrictHostKeyChecking=yes"));
+  assert.ok(deployWorkflow.includes("scripts/hostinger-deploy.sh"));
+  assert.ok(deployWorkflow.includes("concurrency:"));
+  assert.ok(deployWorkflow.includes("environment: production"));
 
   const deploymentDoc = fs.readFileSync(path.join(projectRoot, "docs", "DEPLOYMENT.md"), "utf8");
   assert.ok(deploymentDoc.includes("Pre-deploy checks"));
@@ -1037,11 +1050,18 @@ test("phase 13 CI and release artifacts are checked in", () => {
   assert.ok(deploymentDoc.includes("npm run test:e2e"));
   assert.ok(deploymentDoc.includes("demo-only posture"));
   assert.ok(deploymentDoc.includes("HOSTINGER_VPS_DEPLOYMENT.md"));
+  assert.ok(deploymentDoc.includes("GITHUB_ACTIONS_DEPLOYMENT.md"));
 
   const hostingerDoc = fs.readFileSync(path.join(projectRoot, "docs", "HOSTINGER_VPS_DEPLOYMENT.md"), "utf8");
   assert.ok(hostingerDoc.includes("systemd"));
   assert.ok(hostingerDoc.includes("nginx-subpath-location.conf"));
   assert.ok(hostingerDoc.includes("scripts/hostinger-deploy.sh"));
+  assert.ok(hostingerDoc.includes("GitHub Actions Deployment"));
+
+  const actionsDeploymentDoc = fs.readFileSync(path.join(projectRoot, "docs", "GITHUB_ACTIONS_DEPLOYMENT.md"), "utf8");
+  assert.ok(actionsDeploymentDoc.includes("HOSTINGER_SSH_KNOWN_HOSTS"));
+  assert.ok(actionsDeploymentDoc.includes("Deploy Hostinger VPS"));
+  assert.ok(actionsDeploymentDoc.includes("sudo -n true"));
 
   const hostingerScript = fs.readFileSync(path.join(projectRoot, "scripts", "hostinger-deploy.sh"), "utf8");
   assert.ok(hostingerScript.includes("git pull --ff-only"));
@@ -1057,6 +1077,7 @@ test("phase 13 CI and release artifacts are checked in", () => {
   assert.ok(releaseChecklist.includes("npm run test:e2e"));
   assert.ok(releaseChecklist.includes("docs/VISUAL_QA.md"));
   assert.ok(releaseChecklist.includes("simulation-only"));
+  assert.ok(releaseChecklist.includes("Deploy Hostinger VPS"));
 });
 
 test("all API route files are explicitly covered by smoke tests", () => {

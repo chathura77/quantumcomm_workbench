@@ -61,6 +61,8 @@ cd /var/www/quantumcomm_workbench
 bash scripts/hostinger-deploy.sh
 ```
 
+GitHub Actions can also deploy to Hostinger after CI passes. Configure the secrets in `docs/GITHUB_ACTIONS_DEPLOYMENT.md`, then run `Deploy Hostinger VPS` manually or set `HOSTINGER_AUTO_DEPLOY=true` for automatic main-branch releases.
+
 For Nginx, use `ops/hostinger/nginx-subpath-location.conf` inside the existing `sarathchandra.com` server block, or `ops/hostinger/nginx-subdomain-site.conf` for a dedicated `quantumworkbench.sarathchandra.com` site. Full steps are in `docs/HOSTINGER_VPS_DEPLOYMENT.md`.
 
 ## SEO and AI-readable indexes

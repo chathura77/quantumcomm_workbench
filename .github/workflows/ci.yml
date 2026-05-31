@@ -7,6 +7,9 @@ on:
       - master
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   verify:
     name: Verify app quality gates
@@ -39,3 +42,9 @@ jobs:
 
       - name: HTTP smoke tests
         run: npm run test:e2e
+
+      - name: Build Hostinger path target
+        env:
+          QUANTUMCOMM_BASE_PATH: /quantumworkbench
+          NEXT_PUBLIC_SITE_URL: https://www.sarathchandra.com/quantumworkbench
+        run: npm run build

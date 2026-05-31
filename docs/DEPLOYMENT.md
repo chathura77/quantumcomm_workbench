@@ -25,15 +25,15 @@ npm run test:e2e
 - The app does not require a database for the current MVP.
 - Browser-local saved runs and scenario libraries remain client-side only and do not need server persistence.
 - API routes are mock/simulation endpoints and should be labeled as educational or demo services in any hosting environment.
-- For Hostinger VPS deployment and update operations, use [`docs/HOSTINGER_VPS_DEPLOYMENT.md`](HOSTINGER_VPS_DEPLOYMENT.md).
+- For Hostinger VPS deployment and update operations, use [`docs/HOSTINGER_VPS_DEPLOYMENT.md`](HOSTINGER_VPS_DEPLOYMENT.md) and [`docs/GITHUB_ACTIONS_DEPLOYMENT.md`](GITHUB_ACTIONS_DEPLOYMENT.md).
 - Use `npm run start -- --hostname 0.0.0.0 --port 3000` or an equivalent process manager command after `npm run build`; do not expose `npm run dev` on a public interface.
 - For `https://www.sarathchandra.com/quantumworkbench`, set `QUANTUMCOMM_BASE_PATH=/quantumworkbench` before `npm run build` and route that path prefix to the Next.js server. For a true subdomain such as `https://quantumworkbench.sarathchandra.com`, leave `QUANTUMCOMM_BASE_PATH` unset.
 - Put the app behind HTTPS with a reverse proxy or load balancer. Allow public ingress only on 80/443, forward to the local Next.js port, and keep SSH restricted to trusted operators.
 - Next.js emits a conservative Content Security Policy plus framing, MIME-sniffing, referrer, permissions, and cross-origin headers. Validate any future third-party script, image, analytics, or font addition against `next.config.mjs` before deployment.
 - API routes use bounded JSON parsing, no-store JSON responses, and in-memory rate limiting. These limits reduce accidental or low-effort abuse but are not a substitute for VM-level firewalling, reverse-proxy request limits, or WAF/rate controls on an internet-facing service.
 - The ETSI-style QKD API is a simulation sandbox. Its demo tokens and returned `keyMaterial` strings are not production credentials or secret-key delivery; do not connect the mock API to real KMS, HSM, or network encryption systems.
-- Keep [`docs/SECURITY_HARDENING.md`](/C:/Users/maguracs/source/quantumcomm_workbench/docs/SECURITY_HARDENING.md) with the release notes so residual risks are visible to operators.
-- Review [`docs/MODEL_LIMITATIONS.md`](/C:/Users/maguracs/source/quantumcomm_workbench/docs/MODEL_LIMITATIONS.md) and [`docs/VISUAL_QA.md`](/C:/Users/maguracs/source/quantumcomm_workbench/docs/VISUAL_QA.md) before promoting a release.
+- Keep [`docs/SECURITY_HARDENING.md`](SECURITY_HARDENING.md) with the release notes so residual risks are visible to operators.
+- Review [`docs/MODEL_LIMITATIONS.md`](MODEL_LIMITATIONS.md) and [`docs/VISUAL_QA.md`](VISUAL_QA.md) before promoting a release.
 
 ## Public VM checklist
 

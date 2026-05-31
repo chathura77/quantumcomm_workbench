@@ -95,6 +95,12 @@ The script:
 5. Installs and restarts a `quantumcomm-workbench.service` systemd service.
 6. Runs a local HTTP health check.
 
+## GitHub Actions Deployment
+
+After the manual script works, GitHub Actions can run the same deployment remotely over SSH. Configure the secrets and variables in `docs/GITHUB_ACTIONS_DEPLOYMENT.md`, then run `Deploy Hostinger VPS` from the Actions tab.
+
+Leave `HOSTINGER_AUTO_DEPLOY` unset for manual releases. Set it to `true` only when you want every successful `main` branch CI run to deploy automatically.
+
 ## Nginx
 
 ### Path Deployment
@@ -160,6 +166,8 @@ ssh deploy@YOUR_VPS_IP
 cd /var/www/quantumcomm_workbench
 bash scripts/hostinger-deploy.sh
 ```
+
+Or trigger `Deploy Hostinger VPS` from GitHub Actions once the CI workflow is green.
 
 To skip tests during an urgent hotfix deployment:
 
