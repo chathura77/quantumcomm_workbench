@@ -1036,6 +1036,21 @@ test("phase 13 CI and release artifacts are checked in", () => {
   assert.ok(deploymentDoc.includes("npm run build"));
   assert.ok(deploymentDoc.includes("npm run test:e2e"));
   assert.ok(deploymentDoc.includes("demo-only posture"));
+  assert.ok(deploymentDoc.includes("HOSTINGER_VPS_DEPLOYMENT.md"));
+
+  const hostingerDoc = fs.readFileSync(path.join(projectRoot, "docs", "HOSTINGER_VPS_DEPLOYMENT.md"), "utf8");
+  assert.ok(hostingerDoc.includes("systemd"));
+  assert.ok(hostingerDoc.includes("nginx-subpath-location.conf"));
+  assert.ok(hostingerDoc.includes("scripts/hostinger-deploy.sh"));
+
+  const hostingerScript = fs.readFileSync(path.join(projectRoot, "scripts", "hostinger-deploy.sh"), "utf8");
+  assert.ok(hostingerScript.includes("git pull --ff-only"));
+  assert.ok(hostingerScript.includes("systemctl restart"));
+  assert.ok(hostingerScript.includes("npm run build"));
+
+  const nginxSubpath = fs.readFileSync(path.join(projectRoot, "ops", "hostinger", "nginx-subpath-location.conf"), "utf8");
+  assert.ok(nginxSubpath.includes("location /quantumworkbench/"));
+  assert.ok(nginxSubpath.includes("proxy_pass http://127.0.0.1:3000"));
 
   const releaseChecklist = fs.readFileSync(path.join(projectRoot, "docs", "RELEASE_CHECKLIST.md"), "utf8");
   assert.ok(releaseChecklist.includes("npm run lint"));
