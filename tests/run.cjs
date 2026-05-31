@@ -778,16 +778,17 @@ test("SEO and AI-readable surfaces expose canonical crawl metadata", async () =>
   const llmsRoute = projectRequire("app/llms.txt/route.ts");
   const llmsFullRoute = projectRequire("app/llms-full.txt/route.ts");
   const aiSummaryRoute = projectRequire("app/ai-summary.json/route.ts");
+  const expectedPublicSiteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? process.env.QUANTUMCOMM_SITE_URL ?? "https://www.sarathchandra.com/quantumworkbench").replace(/\/+$/, "");
 
-  assert.equal(seo.getPublicSiteUrl(), "https://www.sarathchandra.com/quantumworkbench");
-  assert.ok(seo.absoluteUrl("/tools/link-budget").endsWith("/quantumworkbench/tools/link-budget"));
+  assert.equal(seo.getPublicSiteUrl(), expectedPublicSiteUrl);
+  assert.equal(seo.absoluteUrl("/tools/link-budget"), `${expectedPublicSiteUrl}/tools/link-budget`);
 
   const sitemap = sitemapModule.default();
-  assert.ok(sitemap.some((entry) => entry.url.endsWith("/quantumworkbench/tools/phase-encoding-calculator")));
-  assert.ok(sitemap.some((entry) => entry.url.endsWith("/quantumworkbench/llms.txt")));
+  assert.ok(sitemap.some((entry) => entry.url === `${expectedPublicSiteUrl}/tools/phase-encoding-calculator`));
+  assert.ok(sitemap.some((entry) => entry.url === `${expectedPublicSiteUrl}/llms.txt`));
 
   const robots = robotsModule.default();
-  assert.ok(robots.sitemap.endsWith("/quantumworkbench/sitemap.xml"));
+  assert.equal(robots.sitemap, `${expectedPublicSiteUrl}/sitemap.xml`);
   assert.ok(robots.rules.some((rule) => rule.userAgent === "GPTBot" && rule.allow === "/"));
   assert.ok(robots.rules.some((rule) => rule.userAgent === "OAI-SearchBot" && rule.allow === "/"));
 
@@ -802,7 +803,7 @@ test("SEO and AI-readable surfaces expose canonical crawl metadata", async () =>
 
   const aiSummary = await readJson(aiSummaryRoute.GET());
   assert.equal(aiSummary.name, "QuantumComm Workbench");
-  assert.ok(aiSummary.machineReadable.llmsTxt.endsWith("/quantumworkbench/llms.txt"));
+  assert.equal(aiSummary.machineReadable.llmsTxt, `${expectedPublicSiteUrl}/llms.txt`);
   assert.ok(aiSummary.tools.some((tool) => tool.url.endsWith("/tools/phase-encoding-calculator")));
 });
 
