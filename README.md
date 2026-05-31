@@ -37,6 +37,10 @@ npm run start -- --hostname 127.0.0.1 --port 3000
 
 If you deploy it on a true subdomain such as `quantumworkbench.sarathchandra.com`, leave `QUANTUMCOMM_BASE_PATH` unset.
 
+## SEO and AI-readable indexes
+
+The app emits sitemap, robots, JSON-LD, `llms.txt`, `llms-full.txt`, and `ai-summary.json` surfaces for search crawlers and AI assistants. See `docs/SEO_AI_READINESS.md` for canonical URL configuration and crawler notes.
+
 ## Verification
 
 ```bash

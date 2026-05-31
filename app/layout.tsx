@@ -2,15 +2,49 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
 import { disclaimer, hostBrand, hostNav, mainNav } from "@/lib/content";
+import { absoluteUrl, buildStructuredData, getPublicSiteUrl, seoKeywords } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "QuantumComm Workbench | Chathura Sarathchandra",
+  metadataBase: new URL(getPublicSiteUrl()),
+  title: {
+    default: "QuantumComm Workbench | Chathura Sarathchandra",
+    template: "%s | QuantumComm Workbench"
+  },
   description: "Quantum communication calculators, QKD API sandboxes, and network scenario tools.",
+  applicationName: "QuantumComm Workbench",
+  authors: [{ name: hostBrand.name, url: hostBrand.homeUrl }],
+  creator: hostBrand.name,
+  publisher: hostBrand.name,
+  category: "Quantum communication research tools",
+  keywords: seoKeywords,
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1
+    }
+  },
+  alternates: {
+    types: {
+      "text/markdown": absoluteUrl("/llms.txt"),
+      "application/json": absoluteUrl("/ai-summary.json")
+    }
+  },
   openGraph: {
     siteName: "Chathura Sarathchandra",
     title: "QuantumComm Workbench",
     description: "Quantum communication calculators, QKD API sandboxes, and network scenario tools.",
-    type: "website"
+    type: "website",
+    url: getPublicSiteUrl()
+  },
+  twitter: {
+    card: "summary",
+    title: "QuantumComm Workbench",
+    description: "Quantum communication calculators, QKD API sandboxes, and network scenario tools.",
+    creator: "@chathura77"
   },
   icons: {
     icon: "/icon.svg"
@@ -20,9 +54,14 @@ export const metadata: Metadata = {
 const sourceRepositoryUrl = "https://github.com/chathura77/quantumcomm_workbench";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const structuredData = buildStructuredData();
+
   return (
     <html lang="en">
       <body>
+        <script type="application/ld+json" suppressHydrationWarning>
+          {JSON.stringify(structuredData)}
+        </script>
         <a
           href="#main-content"
           className="skip-link"
@@ -75,6 +114,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <a href={hostBrand.sandboxUrl} className="font-medium text-ink hover:text-hostorange">The Sandbox</a>
                 <Link href="/resources/standards" className="font-medium text-ink hover:text-cyanline">References and standards</Link>
                 <Link href="/resources/model-limitations" className="font-medium text-ink hover:text-cyanline">Model limitations</Link>
+                <Link href="/llms.txt" className="font-medium text-ink hover:text-cyanline">AI index</Link>
+                <Link href="/ai-summary.json" className="font-medium text-ink hover:text-cyanline">AI summary JSON</Link>
                 <a href={sourceRepositoryUrl} className="font-medium text-ink hover:text-cyanline">Source repository</a>
               </div>
             </div>

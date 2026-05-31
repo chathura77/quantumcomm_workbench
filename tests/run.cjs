@@ -765,8 +765,45 @@ test("root layout exposes skip navigation and repository footer link", () => {
   assert.ok(html.includes("Back to sarathchandra.com"));
   assert.ok(html.includes("https://www.sarathchandra.com/"));
   assert.ok(html.includes("Source repository"));
+  assert.ok(html.includes("AI index"));
+  assert.ok(html.includes("application/ld+json"));
   assert.ok(html.includes("github.com/chathura77/quantumcomm_workbench"));
   assert.ok(!html.includes("Source link placeholder"));
+});
+
+test("SEO and AI-readable surfaces expose canonical crawl metadata", async () => {
+  const seo = projectRequire("lib/seo.ts");
+  const sitemapModule = projectRequire("app/sitemap.ts");
+  const robotsModule = projectRequire("app/robots.ts");
+  const llmsRoute = projectRequire("app/llms.txt/route.ts");
+  const llmsFullRoute = projectRequire("app/llms-full.txt/route.ts");
+  const aiSummaryRoute = projectRequire("app/ai-summary.json/route.ts");
+
+  assert.equal(seo.getPublicSiteUrl(), "https://www.sarathchandra.com/quantumworkbench");
+  assert.ok(seo.absoluteUrl("/tools/link-budget").endsWith("/quantumworkbench/tools/link-budget"));
+
+  const sitemap = sitemapModule.default();
+  assert.ok(sitemap.some((entry) => entry.url.endsWith("/quantumworkbench/tools/phase-encoding-calculator")));
+  assert.ok(sitemap.some((entry) => entry.url.endsWith("/quantumworkbench/llms.txt")));
+
+  const robots = robotsModule.default();
+  assert.ok(robots.sitemap.endsWith("/quantumworkbench/sitemap.xml"));
+  assert.ok(robots.rules.some((rule) => rule.userAgent === "GPTBot" && rule.allow === "/"));
+  assert.ok(robots.rules.some((rule) => rule.userAgent === "OAI-SearchBot" && rule.allow === "/"));
+
+  const llmsText = await (await llmsRoute.GET()).text();
+  assert.ok(llmsText.includes("# QuantumComm Workbench"));
+  assert.ok(llmsText.includes("AI summary JSON"));
+  assert.ok(llmsText.includes("certified security guarantees"));
+
+  const llmsFullText = await (await llmsFullRoute.GET()).text();
+  assert.ok(llmsFullText.includes("Recommended Citation Behavior"));
+  assert.ok(llmsFullText.includes("Phase Encoding"));
+
+  const aiSummary = await readJson(aiSummaryRoute.GET());
+  assert.equal(aiSummary.name, "QuantumComm Workbench");
+  assert.ok(aiSummary.machineReadable.llmsTxt.endsWith("/quantumworkbench/llms.txt"));
+  assert.ok(aiSummary.tools.some((tool) => tool.url.endsWith("/tools/phase-encoding-calculator")));
 });
 
 test("shared UI helpers expose accessible descriptions and chart summaries", () => {
