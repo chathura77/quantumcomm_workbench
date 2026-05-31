@@ -30,6 +30,60 @@ ssh-keyscan -H YOUR_VPS_HOST
 
 Verify the printed fingerprint against the VPS console or Hostinger's SSH details before saving it as a secret.
 
+## SSH Key Setup
+
+The `HOSTINGER_VPS_SSH_KEY` secret must contain a private key in OpenSSH format. The value should start with:
+
+```text
+-----BEGIN OPENSSH PRIVATE KEY-----
+```
+
+and end with:
+
+```text
+-----END OPENSSH PRIVATE KEY-----
+```
+
+Do not paste the `.pub` file, a PuTTY `.ppk` file, a screenshot, or a one-line value with literal `\n` characters.
+
+Generate a dedicated deploy key on your local machine:
+
+```bash
+ssh-keygen -t ed25519 -C "quantumcomm GitHub Actions deploy" -f ./quantumcomm_hostinger_actions_ed25519 -N ""
+```
+
+Install the public key on the VPS:
+
+```bash
+ssh-copy-id -i ./quantumcomm_hostinger_actions_ed25519.pub deploy@quantum-workbench.sarathchandra.com
+```
+
+If `ssh-copy-id` is unavailable, append the public key manually:
+
+```bash
+cat ./quantumcomm_hostinger_actions_ed25519.pub | ssh deploy@quantum-workbench.sarathchandra.com 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys'
+```
+
+Test the key before adding it to GitHub:
+
+```bash
+ssh -i ./quantumcomm_hostinger_actions_ed25519 deploy@quantum-workbench.sarathchandra.com 'hostname && sudo -n true'
+```
+
+Copy the private key into the GitHub secret exactly as a multi-line value:
+
+```bash
+cat ./quantumcomm_hostinger_actions_ed25519
+```
+
+On Windows PowerShell:
+
+```powershell
+Get-Content -Raw .\quantumcomm_hostinger_actions_ed25519 | Set-Clipboard
+```
+
+Then paste the clipboard into `HOSTINGER_VPS_SSH_KEY`.
+
 ## Optional GitHub Variables
 
 Create these under `Settings` -> `Secrets and variables` -> `Actions` -> `Variables` when you need to override defaults.

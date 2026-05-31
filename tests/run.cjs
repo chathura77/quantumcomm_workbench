@@ -1042,6 +1042,8 @@ test("phase 13 CI and release artifacts are checked in", () => {
   assert.ok(deployWorkflow.includes("HOSTINGER_AUTO_DEPLOY"));
   assert.ok(deployWorkflow.includes("quantum-workbench.sarathchandra.com"));
   assert.ok(deployWorkflow.includes("BASE_PATH: ${{ vars.HOSTINGER_BASE_PATH || '__root__' }}"));
+  assert.ok(deployWorkflow.includes("ssh-keygen -y -f"));
+  assert.ok(deployWorkflow.includes("not a readable unencrypted OpenSSH private key"));
   assert.ok(deployWorkflow.includes("StrictHostKeyChecking=yes"));
   assert.ok(deployWorkflow.includes("scripts/hostinger-deploy.sh"));
   assert.ok(deployWorkflow.includes("concurrency:"));
@@ -1067,6 +1069,9 @@ test("phase 13 CI and release artifacts are checked in", () => {
   assert.ok(actionsDeploymentDoc.includes("HOSTINGER_SSH_KNOWN_HOSTS"));
   assert.ok(actionsDeploymentDoc.includes("Deploy Hostinger VPS"));
   assert.ok(actionsDeploymentDoc.includes("sudo -n true"));
+  assert.ok(actionsDeploymentDoc.includes("BEGIN OPENSSH PRIVATE KEY"));
+  assert.ok(actionsDeploymentDoc.includes("ssh-keygen -t ed25519"));
+  assert.ok(actionsDeploymentDoc.includes("Set-Clipboard"));
 
   const hostingerScript = fs.readFileSync(path.join(projectRoot, "scripts", "hostinger-deploy.sh"), "utf8");
   assert.ok(hostingerScript.includes("${QUANTUMCOMM_BASE_PATH+x}"));

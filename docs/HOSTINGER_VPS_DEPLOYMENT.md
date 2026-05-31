@@ -143,9 +143,11 @@ Add GitHub Actions secrets:
 ```text
 HOSTINGER_VPS_HOST=quantum-workbench.sarathchandra.com
 HOSTINGER_VPS_USER=deploy
-HOSTINGER_VPS_SSH_KEY=<private key for the deploy user>
+HOSTINGER_VPS_SSH_KEY=<full unencrypted OpenSSH private key for the deploy user>
 HOSTINGER_SSH_KNOWN_HOSTS=<output of ssh-keyscan -H quantum-workbench.sarathchandra.com>
 ```
+
+The SSH key secret must be the full multi-line private key block, not the `.pub` file or a PuTTY `.ppk` file. See `docs/GITHUB_ACTIONS_DEPLOYMENT.md` for exact key-generation and copy commands.
 
 Add GitHub Actions variables:
 
