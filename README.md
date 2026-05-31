@@ -13,9 +13,13 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-## Production run path
+## Deployment, Updates, and Maintenance
 
-For a public VM, build and run the production server rather than the development server:
+Use the production server for public hosting. Never expose `npm run dev` on a public interface.
+
+### Pre-deploy checks
+
+Run these before merging or deploying manually:
 
 ```bash
 npm ci
@@ -23,10 +27,18 @@ npm run lint
 npm run typecheck
 npm run test
 npm run build
-npm run start -- --hostname 0.0.0.0 --port 3000
+npm run test:e2e
 ```
 
-Terminate TLS at a reverse proxy such as Caddy, Nginx, or a cloud load balancer, and expose only ports 80/443 publicly. The app sets browser security headers and API no-store headers, but the mock QKD API remains educational demo infrastructure and must not be wired to production secrets. See `docs/SECURITY_HARDENING.md` for the current hardening posture and residual risks.
+To start a production server directly:
+
+```bash
+npm run start -- --hostname 127.0.0.1 --port 3000
+```
+
+Terminate TLS at Nginx, Caddy, or a load balancer, and expose only ports 80/443 publicly. Bind the Next.js service to `127.0.0.1:3000` when a local reverse proxy forwards traffic. The app sets browser security headers and API no-store headers, but the mock QKD API remains educational demo infrastructure and must not be wired to production secrets.
+
+### Domain mode
 
 To deploy under a path on `sarathchandra.com`, build with a base path:
 
@@ -37,11 +49,11 @@ npm run start -- --hostname 127.0.0.1 --port 3000
 
 If you deploy it on a true subdomain such as `quantumworkbench.sarathchandra.com`, leave `QUANTUMCOMM_BASE_PATH` unset.
 
-## Hostinger VPS deployment and updates
+### Hostinger VPS first deployment
 
 The recommended VPS setup is Git + Node.js LTS + systemd + Nginx. This keeps the app maintainable: push changes to GitHub, SSH into the VPS, pull, build, restart, and health-check with one script.
 
-First deployment on the VPS:
+On the VPS:
 
 ```bash
 sudo apt update
@@ -53,7 +65,37 @@ NEXT_PUBLIC_SITE_URL=https://www.sarathchandra.com/quantumworkbench \
 bash scripts/hostinger-deploy.sh
 ```
 
-Future update after new commits are pushed:
+For Nginx, use `ops/hostinger/nginx-subpath-location.conf` inside the existing `sarathchandra.com` server block, or `ops/hostinger/nginx-subdomain-site.conf` for a dedicated `quantumworkbench.sarathchandra.com` site. Full VPS steps are in `docs/HOSTINGER_VPS_DEPLOYMENT.md`.
+
+### GitHub Actions deployment
+
+GitHub Actions can deploy to Hostinger after CI passes. Add these repository secrets:
+
+```text
+HOSTINGER_VPS_HOST
+HOSTINGER_VPS_USER
+HOSTINGER_VPS_SSH_KEY
+HOSTINGER_SSH_KNOWN_HOSTS
+```
+
+`HOSTINGER_VPS_SSH_PORT` is optional and defaults to `22`.
+
+Then run `Deploy Hostinger VPS` from the GitHub Actions tab. Leave `HOSTINGER_AUTO_DEPLOY` unset for manual releases, or set it to `true` as an Actions variable to deploy automatically after `CI` passes on `main`.
+
+Useful optional Actions variables:
+
+```text
+HOSTINGER_APP_DIR=/var/www/quantumcomm_workbench
+HOSTINGER_BASE_PATH=/quantumworkbench
+HOSTINGER_SITE_URL=https://www.sarathchandra.com/quantumworkbench
+HOSTINGER_PUBLIC_HEALTH_URL=https://www.sarathchandra.com/quantumworkbench/
+```
+
+For a true subdomain deployment, set `HOSTINGER_BASE_PATH=__root__`. Full Actions setup is in `docs/GITHUB_ACTIONS_DEPLOYMENT.md`.
+
+### Manual update flow
+
+After new commits are pushed:
 
 ```bash
 ssh deploy@YOUR_VPS_IP
@@ -61,25 +103,45 @@ cd /var/www/quantumcomm_workbench
 bash scripts/hostinger-deploy.sh
 ```
 
-GitHub Actions can also deploy to Hostinger after CI passes. Configure the secrets in `docs/GITHUB_ACTIONS_DEPLOYMENT.md`, then run `Deploy Hostinger VPS` manually or set `HOSTINGER_AUTO_DEPLOY=true` for automatic main-branch releases.
+The script pulls the latest `main`, installs from `package-lock.json`, runs checks, builds, restarts `quantumcomm-workbench.service`, and performs a local health check.
 
-For Nginx, use `ops/hostinger/nginx-subpath-location.conf` inside the existing `sarathchandra.com` server block, or `ops/hostinger/nginx-subdomain-site.conf` for a dedicated `quantumworkbench.sarathchandra.com` site. Full steps are in `docs/HOSTINGER_VPS_DEPLOYMENT.md`.
+Use this only for urgent hotfixes:
+
+```bash
+RUN_CHECKS=0 bash scripts/hostinger-deploy.sh
+```
+
+### Maintenance commands
+
+On the VPS:
+
+```bash
+sudo systemctl status quantumcomm-workbench
+sudo journalctl -u quantumcomm-workbench -f
+sudo systemctl restart quantumcomm-workbench
+curl -I http://127.0.0.1:3000/quantumworkbench/
+curl -I https://www.sarathchandra.com/quantumworkbench/
+sudo nginx -t
+sudo systemctl reload nginx
+npm audit --audit-level=high
+```
+
+For rollback:
+
+```bash
+cd /var/www/quantumcomm_workbench
+git log --oneline -5
+git checkout COMMIT_SHA
+PULL_LATEST=0 bash scripts/hostinger-deploy.sh
+git checkout main
+bash scripts/hostinger-deploy.sh
+```
+
+Keep `docs/SECURITY_HARDENING.md`, `docs/MODEL_LIMITATIONS.md`, `docs/VISUAL_QA.md`, `docs/HOSTINGER_VPS_DEPLOYMENT.md`, and `docs/GITHUB_ACTIONS_DEPLOYMENT.md` with release notes so operators can see the current risk and deployment posture.
 
 ## SEO and AI-readable indexes
 
 The app emits sitemap, robots, JSON-LD, `llms.txt`, `llms-full.txt`, and `ai-summary.json` surfaces for search crawlers and AI assistants. See `docs/SEO_AI_READINESS.md` for canonical URL configuration and crawler notes.
-
-## Verification
-
-```bash
-npm run lint
-npm run typecheck
-npm run test
-npm run build
-npm run test:e2e
-```
-
-For responsive/manual UI review after layout or shared-component changes, use `docs/VISUAL_QA.md`.
 
 ## Implemented MVP areas
 
