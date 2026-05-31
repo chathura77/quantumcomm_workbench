@@ -760,6 +760,10 @@ test("root layout exposes skip navigation and repository footer link", () => {
   assert.ok(html.includes("Skip to main content"));
   assert.ok(html.includes("id=\"main-content\""));
   assert.ok(html.includes("aria-label=\"Primary\""));
+  assert.ok(html.includes("aria-label=\"SarathChandra.com\""));
+  assert.ok(html.includes("SarathChandra.com Sandbox"));
+  assert.ok(html.includes("Back to sarathchandra.com"));
+  assert.ok(html.includes("https://www.sarathchandra.com/"));
   assert.ok(html.includes("Source repository"));
   assert.ok(html.includes("github.com/chathura77/quantumcomm_workbench"));
   assert.ok(!html.includes("Source link placeholder"));

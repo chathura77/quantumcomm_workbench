@@ -1,4 +1,9 @@
 const isDevelopment = process.env.NODE_ENV !== "production";
+const basePath = process.env.QUANTUMCOMM_BASE_PATH?.trim();
+
+if (basePath && (!basePath.startsWith("/") || basePath.endsWith("/"))) {
+  throw new Error("QUANTUMCOMM_BASE_PATH must start with '/' and must not end with '/'. Example: /quantumworkbench");
+}
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -29,6 +34,7 @@ const securityHeaders = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  ...(basePath ? { basePath } : {}),
   async headers() {
     return [
       {

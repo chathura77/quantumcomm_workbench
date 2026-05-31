@@ -28,6 +28,15 @@ npm run start -- --hostname 0.0.0.0 --port 3000
 
 Terminate TLS at a reverse proxy such as Caddy, Nginx, or a cloud load balancer, and expose only ports 80/443 publicly. The app sets browser security headers and API no-store headers, but the mock QKD API remains educational demo infrastructure and must not be wired to production secrets. See `docs/SECURITY_HARDENING.md` for the current hardening posture and residual risks.
 
+To deploy under a path on `sarathchandra.com`, build with a base path:
+
+```bash
+QUANTUMCOMM_BASE_PATH=/quantumworkbench npm run build
+npm run start -- --hostname 127.0.0.1 --port 3000
+```
+
+If you deploy it on a true subdomain such as `quantumworkbench.sarathchandra.com`, leave `QUANTUMCOMM_BASE_PATH` unset.
+
 ## Verification
 
 ```bash

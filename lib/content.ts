@@ -1,6 +1,23 @@
 export const disclaimer =
   "QuantumComm Workbench provides educational and research-oriented estimates. Simplified models are not a substitute for certified security proofs, calibrated hardware characterization, or production cryptographic validation.";
 
+export const hostBrand = {
+  name: "Chathura Sarathchandra",
+  homeUrl: "https://www.sarathchandra.com/",
+  sandboxUrl: "https://www.sarathchandra.com/the-sandbox/",
+  label: "SarathChandra.com Sandbox",
+  tagline: "A quantum communication workbench from Chathura Sarathchandra's digital home.",
+  personalDisclaimer:
+    "All content represents personal views and research-oriented exploration. It does not represent the views, policies, or positions of any employer, collaborator, or affiliated organization."
+};
+
+export const hostNav = [
+  { href: "https://www.sarathchandra.com/", label: "Home" },
+  { href: "https://www.sarathchandra.com/about/", label: "About" },
+  { href: "https://www.sarathchandra.com/blog/", label: "Blog" },
+  { href: "https://www.sarathchandra.com/the-sandbox/", label: "The Sandbox" }
+];
+
 export const mainNav = [
   { href: "/learn", label: "Learn" },
   { href: "/tools", label: "Tools" },
