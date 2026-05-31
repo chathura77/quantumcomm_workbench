@@ -14,6 +14,165 @@ Use a standard Ubuntu VPS with:
 
 This is intentionally boring infrastructure. It keeps updates simple: pull from GitHub, run one deployment script, and let systemd restart the app.
 
+## New VPS From Scratch
+
+Use this checklist for a fresh Hostinger VPS and a GoDaddy-managed domain. The examples use `quantum-workbench.sarathchandra.com`; replace that hostname consistently if you choose `qworkbench.sarathchandra.com` or another subdomain.
+
+### 1. Add DNS
+
+In GoDaddy DNS, add a new A record:
+
+```text
+Type: A
+Name: quantum-workbench
+Value: YOUR_HOSTINGER_VPS_IP
+TTL: 600 seconds
+```
+
+Do not edit the existing `www` CNAME that points to Ghost. DNS cannot route only `/quantumworkbench` to a different VPS while `www` is owned by Ghost, so the clean deployment is a dedicated subdomain.
+
+After saving the record, check propagation:
+
+```bash
+nslookup quantum-workbench.sarathchandra.com
+```
+
+### 2. Create a Deployment User
+
+Connect as root, update the server, and create a non-root operator account:
+
+```bash
+ssh root@YOUR_HOSTINGER_VPS_IP
+apt update && apt upgrade -y
+adduser deploy
+usermod -aG sudo deploy
+```
+
+Log back in as that user:
+
+```bash
+ssh deploy@YOUR_HOSTINGER_VPS_IP
+```
+
+### 3. Install Server Packages
+
+```bash
+sudo apt update
+sudo apt install -y git curl ca-certificates nginx ufw certbot python3-certbot-nginx
+```
+
+Install Node.js 22 from your preferred trusted package source, then verify:
+
+```bash
+node --version
+npm --version
+```
+
+### 4. Clone the App
+
+```bash
+sudo mkdir -p /var/www
+sudo chown "$USER":"$USER" /var/www
+git clone https://github.com/chathura77/quantumcomm_workbench.git /var/www/quantumcomm_workbench
+cd /var/www/quantumcomm_workbench
+```
+
+### 5. Run the First Deployment
+
+For a subdomain/root deployment:
+
+```bash
+QUANTUMCOMM_BASE_PATH= \
+NEXT_PUBLIC_SITE_URL=https://quantum-workbench.sarathchandra.com \
+bash scripts/hostinger-deploy.sh
+```
+
+### 6. Configure Nginx
+
+```bash
+sudo cp ops/hostinger/nginx-subdomain-site.conf /etc/nginx/sites-available/quantumcomm-workbench
+sudo sed -i 's/quantumworkbench.sarathchandra.com/quantum-workbench.sarathchandra.com/g' /etc/nginx/sites-available/quantumcomm-workbench
+sudo ln -s /etc/nginx/sites-available/quantumcomm-workbench /etc/nginx/sites-enabled/quantumcomm-workbench
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+### 7. Configure Firewall and TLS
+
+Use Hostinger VPS Firewall in hPanel as the outer layer, and UFW on the VPS:
+
+```bash
+sudo ufw allow OpenSSH
+sudo ufw allow 'Nginx Full'
+sudo ufw enable
+sudo ufw status verbose
+```
+
+Issue the HTTPS certificate after DNS resolves to the VPS:
+
+```bash
+sudo certbot --nginx -d quantum-workbench.sarathchandra.com
+sudo certbot renew --dry-run
+```
+
+### 8. Verify Production
+
+```bash
+sudo systemctl status quantumcomm-workbench
+curl -I http://127.0.0.1:3000/
+curl -I https://quantum-workbench.sarathchandra.com/
+```
+
+### 9. Enable GitHub Actions Deployment
+
+Confirm the deployment user can run the deployment script and non-interactive sudo:
+
+```bash
+cd /var/www/quantumcomm_workbench
+bash scripts/hostinger-deploy.sh
+sudo -n true
+```
+
+If `sudo -n true` fails, configure tightly scoped passwordless sudo for the deployment commands before enabling Actions.
+
+Add GitHub Actions secrets:
+
+```text
+HOSTINGER_VPS_HOST=quantum-workbench.sarathchandra.com
+HOSTINGER_VPS_USER=deploy
+HOSTINGER_VPS_SSH_KEY=<private key for the deploy user>
+HOSTINGER_SSH_KNOWN_HOSTS=<output of ssh-keyscan -H quantum-workbench.sarathchandra.com>
+```
+
+Add GitHub Actions variables:
+
+```text
+HOSTINGER_APP_DIR=/var/www/quantumcomm_workbench
+HOSTINGER_BASE_PATH=__root__
+HOSTINGER_SITE_URL=https://quantum-workbench.sarathchandra.com
+HOSTINGER_PUBLIC_HEALTH_URL=https://quantum-workbench.sarathchandra.com/
+```
+
+Start with manual deploys from `Actions` -> `Deploy Hostinger VPS`. Set `HOSTINGER_AUTO_DEPLOY=true` only when you want every successful `main` branch CI run to deploy automatically.
+
+### 10. Normal Updates
+
+Manual VPS update:
+
+```bash
+ssh deploy@YOUR_HOSTINGER_VPS_IP
+cd /var/www/quantumcomm_workbench
+bash scripts/hostinger-deploy.sh
+```
+
+GitHub Actions update:
+
+```text
+Push to main -> CI passes -> Deploy Hostinger VPS workflow runs
+```
+
+Use the manual SSH flow for first setup, Nginx/TLS/DNS changes, rollback, or debugging a failed workflow.
+
 ## Domain Choice
 
 For `https://www.sarathchandra.com/quantumworkbench`:

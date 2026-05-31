@@ -67,6 +67,8 @@ bash scripts/hostinger-deploy.sh
 
 For Nginx, use `ops/hostinger/nginx-subpath-location.conf` inside the existing `sarathchandra.com` server block, or `ops/hostinger/nginx-subdomain-site.conf` for a dedicated `quantumworkbench.sarathchandra.com` site. Full VPS steps are in `docs/HOSTINGER_VPS_DEPLOYMENT.md`.
 
+For a brand-new VPS, DNS, TLS, firewall, and GitHub Actions setup from scratch, use the `New VPS From Scratch` checklist in `docs/HOSTINGER_VPS_DEPLOYMENT.md`.
+
 ### GitHub Actions deployment
 
 GitHub Actions can deploy to Hostinger after CI passes. Add these repository secrets:
